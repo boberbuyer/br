@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy List Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Colors */
+            --bg-dark: #1a1a1a;
+            --card-bg-dark: #252d30;
+            --text-dark: #e5e7eb;
+            --text-secondary-dark: #a1a1a6;
+            --border-dark: rgba(255, 255, 255, 0.1);
+            --accent: #4facfe;
+            --accent-hover: #60a5fa;
+            --danger: #ef4444;
+            --danger-hover: #f87171;
+            --neutral: #6b7280;
+            --neutral-hover: #9ca3af;
+            --success: #10b981;
+            --success-hover: #34d399;
+            --purple: #8b5cf6;
+            --purple-hover: #a78bfa;
+            
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 12px;
+            --space-lg: 16px;
+            --space-xl: 24px;
+            --space-2xl: 32px;
+            
+            /* Border Radius */
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+            
+            /* Transitions */
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+        }
+        
+        @font-face {
+            font-family: 'Gotham';
+            src: url('https://boberbuyer.github.io/font/gotham_book.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Gotham';
+            src: url('https://boberbuyer.github.io/font/gotham_medium.otf') format('opentype');
+            font-weight: 500;
+            font-style: normal;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Gotham', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a1a, #15191a);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: var(--space-lg);
+        }
+        
+        .container {
+            width: 1000px;
+            height: 98vh;
+            background: var(--card-bg-dark);
+            padding: var(--space-xl);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px);
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            overflow-y: auto;
+            animation: slideUp 0.7s ease-in-out;
+            border: 1px solid var(--border-dark);
+        }
+        
+        h2 {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: var(--space-lg);
+            background: linear-gradient(90deg, var(--accent), #00f2fe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+        
+        h2 i {
+            font-size: 20px;
+            color: var(--accent);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+            align-items: center;
+        }
+        
+        .header-actions button {
+            min-width: 100px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: var(--space-md);
+            flex: 1;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+        
+        input, select, button {
+            padding: var(--space-md) var(--space-lg);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-family: 'Gotham', sans-serif;
+            transition: all var(--transition-fast);
+        }
+        
+        input, select {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-dark);
+            flex: 1;
+            border: 1px solid var(--border-dark);
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--accent);
+        }
+        
+        button {
+            background: var(--accent);
+            color: #FFFFFF;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+        }
+        
+        button i {
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        button:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        
+        .delete-btn {
+            background: var(--danger);
+        }
+        
+        .delete-btn:hover {
+            background: var(--danger-hover);
+        }
+        
+        .move-btn, .item-move-btn {
+            background: var(--neutral);
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .move-btn:hover, .item-move-btn:hover {
+            background: var(--neutral-hover);
+        }
+        
+        .item-url-btn {
+            background: var(--success);
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .item-url-btn:hover {
+            background: var(--success-hover);
+        }
+        
+        .add-item-btn {
+            background: var(--accent);
+        }
+        
+        .add-item-btn:hover {
+            background: var(--accent-hover);
+        }
+        
+        .copy-btn {
+            background: var(--purple);
+        }
+        
+        .copy-btn:hover {
+            background: var(--purple-hover);
+        }
+        
+        .category-list {
+            margin: var(--space-lg) 0;
+        }
+        
+        .category {
+            background: rgba(255, 255, 255, 0.05);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-md);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-dark);
+            transition: all var(--transition-fast);
+        }
+        
+        .category:hover {
+            background: rgba(255, 255, 255, 0.07);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+        
+        .category-header input {
+            flex-grow: 1;
+        }
+        
+        .item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-left: var(--space-lg);
+            padding: var(--space-md) 0;
+            animation: fadeIn 0.3s ease-in;
+            transition: transform 0.3s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .item:last-child {
+            border-bottom: none;
+        }
+        
+        .item.moving {
+            transform: translateY(10px);
+            opacity: 0.7;
+        }
+        
+        .item input {
+            flex-grow: 1;
+        }
+        
+        .item input[type="number"] {
+            width: 100px;
+            flex-grow: 0;
+        }
+        
+        .url-input-container {
+            display: none;
+            margin-top: var(--space-md);
+            margin-left: var(--space-lg);
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .url-input-container.active {
+            display: block;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: var(--space-md) var(--space-lg);
+            border-radius: var(--radius-md);
+            background: var(--success);
+            color: white;
+            box-shadow: var(--shadow-lg);
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+        
+        .notification.active {
+            transform: translateX(0);
+        }
+        
+        .notification i {
+            font-size: 18px;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translate(-50%, -40%) scale(0.95); opacity: 0; }
+            to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                height: 95vh;
+                padding: var(--space-lg);
+            }
+            
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .category-header, .item {
+                flex-wrap: wrap;
+                gap: var(--space-md);
+            }
+            
+            .move-btn, .item-move-btn, .item-url-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            button {
+                padding: var(--space-md);
+            }
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container active">
+        <h2><i class="fas fa-list-check"></i> Buy List Manager</h2>
+        
+        <div class="input-group header-actions">
+            <select id="regionSelect">
+                <option value="eu">EU</option>
+                <option value="usa">USA</option>
+            </select>
+            <div class="button-group">
+                <button class="download-btn" onclick="downloadJson()">
+                    <i class="fas fa-download"></i> Download JSON
+                </button>
+                <button class="copy-btn" onclick="copyJson()">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+                <button class="copy-btn" onclick="loadFromClipboard()">
+                    <i class="fas fa-paste"></i> Load from Clipboard
+                </button>
+            </div>
+        </div>
+        
+        <div class="input-group header-actions">
+            <div class="button-group">
+                <button onclick="autoLoadConfig('https://boberbuyer.github.io/eu_buy_list.json')">
+                    <i class="fas fa-cloud-download-alt"></i> Auto load EU
+                </button>
+                <button onclick="autoLoadConfig('https://boberbuyer.github.io/us_buy_list.json')">
+                    <i class="fas fa-cloud-download-alt"></i> Auto load USA
+                </button>
+            </div>
+        </div>
+        
+        <div class="input-group header-actions">
+            <input type="text" id="newCategory" placeholder="New Category">
+            <button onclick="addCategory()">
+                <i class="fas fa-plus"></i> Add Category
+            </button>
+        </div>
+        
+        <div class="category-list" id="categoryList"></div>
+    </div>
+    
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notification-message">Operation successful!</span>
+    </div>
+
+    <script>
+        let data = [];
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationMessage = document.getElementById('notification-message');
+            const icon = notification.querySelector('i');
+            
+            notificationMessage.textContent = message;
+            
+            // Set notification style based on type
+            if (type === 'success') {
+                notification.style.background = '#10b981';
+                icon.className = 'fas fa-check-circle';
+            } else if (type === 'error') {
+                notification.style.background = '#ef4444';
+                icon.className = 'fas fa-exclamation-circle';
+            } else if (type === 'info') {
+                notification.style.background = '#3b82f6';
+                icon.className = 'fas fa-info-circle';
+            }
+            
+            notification.classList.add('active');
+            
+            setTimeout(() => {
+                notification.classList.remove('active');
+            }, 3000);
+        }
+
+        function loadFromClipboard() {
+            navigator.clipboard.readText().then(text => {
+                if (!text || text.trim().startsWith('<')) {
+                    showNotification('Clipboard does not contain valid JSON.', 'error');
+                    return;
+                }
+                try {
+                    data = JSON.parse(text);
+                    normalizeData();
+                    renderCategories();
+                    showNotification('Configuration loaded from clipboard!', 'success');
+                } catch (err) {
+                    console.error('Failed to parse clipboard JSON: ', err);
+                    showNotification('Invalid JSON in clipboard: ' + err.message, 'error');
+                }
+            }).catch(err => {
+                console.error('Failed to read clipboard: ', err);
+                showNotification('Failed to read clipboard: ' + err.message, 'error');
+            });
+        }
+
+        function autoLoadConfig(url) {
+            fetch(url, { headers: { 'Accept': 'application/json' } })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+                    }
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Response is not JSON');
+                    }
+                    return response.json();
+                })
+                .then(json => {
+                    data = json;
+                    normalizeData();
+                    renderCategories();
+                    showNotification(`${url.includes('eu') ? 'EU' : 'USA'} configuration loaded successfully!`, 'success');
+                })
+                .catch(err => {
+                    console.error('Failed to load config: ', err);
+                    showNotification(`Failed to load configuration from ${url.includes('eu') ? 'EU' : 'USA'}. Error: ${err.message}`, 'error');
+                });
+        }
+
+        function normalizeData() {
+            if (!Array.isArray(data)) {
+                data = [];
+            }
+            data.forEach(category => {
+                if (!category.category || category.category.trim() === '') {
+                    category.category = 'Unnamed Category';
+                }
+                if (!Array.isArray(category.items)) {
+                    category.items = [];
+                }
+                category.items.forEach(item => {
+                    item.percentage = item.percentage ?? '';
+                    item.imageUrl = item.imageUrl ?? '';
+                    item.name = item.name || 'Unnamed Item';
+                    item.description = item.description || '';
+                });
+            });
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoryList');
+            if (!container) return;
+            container.innerHTML = '';
+            data.forEach((category, catIndex) => {
+                const div = document.createElement('div');
+                div.className = 'category';
+                div.id = `category-${catIndex}`;
+                div.innerHTML = `
+                    <div class="category-header">
+                        <input type="text" value="${category.category}" onblur="updateCategory(${catIndex}, this.value)">
+                        <button class="move-btn" onclick="moveCategory(${catIndex}, -1)" ${catIndex === 0 ? 'disabled' : ''}>
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <button class="move-btn" onclick="moveCategory(${catIndex}, 1)" ${catIndex === data.length - 1 ? 'disabled' : ''}>
+                            <i class="fas fa-arrow-down"></i>
+                        </button>
+                        <button class="add-item-btn" onclick="addEmptyItem(${catIndex})">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="add-item-btn" onclick="showAddItemForm(${catIndex})">
+                            <i class="fas fa-plus-circle"></i> Custom
+                        </button>
+                        <button class="delete-btn" onclick="deleteCategory(${catIndex})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div id="addItemForm${catIndex}" style="display: none; margin-bottom: 10px;">
+                        <div class="input-group">
+                            <input type="text" id="newItemName${catIndex}" placeholder="Item Name">
+                            <input type="number" id="newItemPercentage${catIndex}" placeholder="Percentage (optional)">
+                            <input type="text" id="newItemDescription${catIndex}" placeholder="Description">
+                            <input type="text" id="newItemImageUrl${catIndex}" placeholder="Image URL (optional)">
+                            <button onclick="addItem(${catIndex})">
+                                <i class="fas fa-plus"></i> Add Custom Item
+                            </button>
+                        </div>
+                    </div>
+                    <div id="items-${catIndex}" class="items-container"></div>
+                `;
+                container.appendChild(div);
+                renderItems(catIndex);
+            });
+        }
+
+        function renderItems(catIndex) {
+            const container = document.getElementById(`items-${catIndex}`);
+            if (!container) return;
+            container.innerHTML = '';
+            data[catIndex].items.forEach((item, itemIndex) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'item';
+                itemDiv.id = `item-${catIndex}-${itemIndex}`;
+                itemDiv.innerHTML = `
+                    <input type="text" value="${item.name}" placeholder="Enter name" onblur="updateItem(${catIndex}, ${itemIndex}, 'name', this.value)">
+                    <input type="number" value="${item.percentage}" placeholder="Optional" onblur="updateItem(${catIndex}, ${itemIndex}, 'percentage', this.value)">
+                    <input type="text" value="${item.description}" placeholder="Enter description" onblur="updateItem(${catIndex}, ${itemIndex}, 'description', this.value)">
+                    <button class="item-url-btn" onclick="toggleUrlInput(${catIndex}, ${itemIndex})">
+                        <i class="fas fa-image"></i>
+                    </button>
+                    <button class="item-move-btn" onclick="moveItem(${catIndex}, ${itemIndex}, -1)" ${itemIndex === 0 ? 'disabled' : ''}>
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <button class="item-move-btn" onclick="moveItem(${catIndex}, ${itemIndex}, 1)" ${itemIndex === data[catIndex].items.length - 1 ? 'disabled' : ''}>
+                        <i class="fas fa-arrow-down"></i>
+                    </button>
+                    <button class="delete-btn" onclick="deleteItem(${catIndex}, ${itemIndex})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                container.appendChild(itemDiv);
+                const urlContainer = document.createElement('div');
+                urlContainer.className = 'url-input-container';
+                urlContainer.id = `url-input-${catIndex}-${itemIndex}`;
+                urlContainer.innerHTML = `
+                    <input type="text" value="${item.imageUrl}" placeholder="Enter image URL" onblur="updateItem(${catIndex}, ${itemIndex}, 'imageUrl', this.value)">
+                `;
+                container.appendChild(urlContainer);
+            });
+        }
+
+        function toggleUrlInput(catIndex, itemIndex) {
+            const urlContainer = document.getElementById(`url-input-${catIndex}-${itemIndex}`);
+            if (urlContainer) {
+                urlContainer.classList.toggle('active');
+            }
+        }
+
+        function addCategory() {
+            const newCategory = document.getElementById('newCategory').value;
+            if (!newCategory) {
+                showNotification('Please enter a category name.', 'error');
+                return;
+            }
+            data.push({ category: newCategory, items: [] });
+            document.getElementById('newCategory').value = '';
+            renderCategories();
+            showNotification('Category added successfully!', 'success');
+        }
+
+        function showAddItemForm(catIndex) {
+            const form = document.getElementById(`addItemForm${catIndex}`);
+            if (form) {
+                form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function addEmptyItem(catIndex) {
+            data[catIndex].items.push({
+                name: 'Unnamed Item',
+                percentage: '',
+                description: '',
+                imageUrl: ''
+            });
+            renderItems(catIndex);
+            showNotification('Item added successfully!', 'success');
+        }
+
+        function addItem(catIndex) {
+            const name = document.getElementById(`newItemName${catIndex}`).value;
+            const percentage = document.getElementById(`newItemPercentage${catIndex}`).value;
+            const description = document.getElementById(`newItemDescription${catIndex}`).value;
+            const imageUrl = document.getElementById(`newItemImageUrl${catIndex}`).value;
+            if (!name || !description) {
+                showNotification('Please enter both item name and description.', 'error');
+                return;
+            }
+            data[catIndex].items.push({
+                name,
+                percentage: percentage ? parseInt(percentage) : '',
+                description,
+                imageUrl: imageUrl || ''
+            });
+            document.getElementById(`newItemName${catIndex}`).value = '';
+            document.getElementById(`newItemPercentage${catIndex}`).value = '';
+            document.getElementById(`newItemDescription${catIndex}`).value = '';
+            document.getElementById(`newItemImageUrl${catIndex}`).value = '';
+            renderItems(catIndex);
+            showAddItemForm(catIndex); // Hide form after adding
+            showNotification('Custom item added successfully!', 'success');
+        }
+
+        function updateCategory(catIndex, value) {
+            if (value && catIndex < data.length) {
+                data[catIndex].category = value;
+                renderCategories(); // Re-render to update button states
+            }
+        }
+
+        function updateItem(catIndex, itemIndex, field, value) {
+            if (catIndex < data.length && itemIndex < data[catIndex].items.length) {
+                if (field === 'percentage') {
+                    data[catIndex].items[itemIndex][field] = value ? parseInt(value) : '';
+                } else if (field === 'imageUrl') {
+                    if (value && !isValidUrl(value)) {
+                        showNotification('Invalid URL format. Please enter a valid URL.', 'error');
+                        return;
+                    }
+                    data[catIndex].items[itemIndex][field] = value;
+                } else {
+                    data[catIndex].items[itemIndex][field] = value;
+                }
+            }
+        }
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function deleteCategory(catIndex) {
+            if (catIndex < data.length) {
+                if (confirm(`Are you sure you want to delete the category "${data[catIndex].category}"?`)) {
+                    data.splice(catIndex, 1);
+                    renderCategories();
+                    showNotification('Category deleted successfully!', 'info');
+                }
+            }
+        }
+
+        function deleteItem(catIndex, itemIndex) {
+            if (catIndex < data.length && itemIndex < data[catIndex].items.length) {
+                if (confirm(`Are you sure you want to delete the item "${data[catIndex].items[itemIndex].name}"?`)) {
+                    data[catIndex].items.splice(itemIndex, 1);
+                    renderItems(catIndex);
+                    showNotification('Item deleted successfully!', 'info');
+                }
+            }
+        }
+
+        function moveCategory(catIndex, direction) {
+            const newIndex = catIndex + direction;
+            if (newIndex >= 0 && newIndex < data.length) {
+                [data[catIndex], data[newIndex]] = [data[newIndex], data[catIndex]];
+                renderCategories();
+                showNotification('Category moved successfully!', 'success');
+            }
+        }
+
+        function moveItem(catIndex, itemIndex, direction) {
+            const newIndex = itemIndex + direction;
+            if (catIndex < data.length && newIndex >= 0 && newIndex < data[catIndex].items.length) {
+                const itemDiv = document.getElementById(`item-${catIndex}-${itemIndex}`);
+                const targetDiv = document.getElementById(`item-${catIndex}-${newIndex}`);
+                if (itemDiv && targetDiv) {
+                    itemDiv.classList.add('moving');
+                    targetDiv.classList.add('moving');
+                    setTimeout(() => {
+                        itemDiv.classList.remove('moving');
+                        targetDiv.classList.remove('moving');
+                    }, 300);
+                }
+                [data[catIndex].items[itemIndex], data[catIndex].items[newIndex]] = 
+                    [data[catIndex].items[newIndex], data[catIndex].items[itemIndex]];
+                renderItems(catIndex);
+                showNotification('Item moved successfully!', 'success');
+            }
+        }
+
+        function downloadJson() {
+            const region = document.getElementById('regionSelect').value;
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${region}_buy_list.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification(`JSON downloaded as ${region}_buy_list.json`, 'success');
+        }
+
+        function copyJson() {
+            const jsonString = JSON.stringify(data, null, 2);
+            navigator.clipboard.writeText(jsonString).then(() => {
+                showNotification('JSON copied to clipboard!', 'success');
+            }).catch(err => {
+                console.error('Failed to copy JSON: ', err);
+                showNotification('Failed to copy JSON to clipboard: ' + err.message, 'error');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('.container');
+            if (container) {
+                container.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

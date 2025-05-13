@@ -1,0 +1,107 @@
+{
+  "sections": [
+    {
+      "title": {
+        "en": "FAQ",
+        "ru": "ЧЗВ",
+        "ua": "FAQ"
+      },
+      "content": {
+            "en": [
+          "<strong>Can I send you warmed-up accounts/devices?</strong><br>Yes, we buy them. Please contact us directly for pricing.",
+          "<strong>Which addresses can I ship items to?</strong><br>The current list is available in our bot.",
+          "<strong>Can I send you stolen goods/invoices/blacklisted items/items from shops that might involve the police?</strong><br>No. We do not accept such parcels. If you do this, we will either return the package or stop working with you.",
+          "<strong>Do you buy clothing or perfume?</strong><br>No, we don’t buy clothing or perfume — only electronics. We do buy expensive watches (like Rolex or Cartier), but each case requires prior discussion.",
+          "<strong>Can I initiate a return to your addresses?</strong><br>Yes, returns are allowed, but only under the conditions specified in our rules.",
+          "<strong>Who is the admin/support of the project?</strong><br>The only official account is @bobercc.",
+          "<strong>What’s the fee for selling electronics?</strong><br>The current list is always available in the Buy List tab.",
+          "<strong>What does POP mean in the form?</strong><br>It stands for 'Proof of Purchase'. We need to confirm the order was placed legally.",
+          "<strong>What is reroute and why is it used?</strong><br>Reroute means forwarding a package to our address after placing the order to a clean (random) address in the city."
+        ],
+        "ru": [
+          "<strong>Могу ли я отправить вам прогревы?</strong><br>Да, мы их покупаем; цену можно уточнить в личных сообщениях.",
+          "<strong>На какие адреса я могу отправлять товары?</strong><br>Текущий список доступен в боте.",
+          "<strong>Могу ли я отправлять вам краденые товары/инвойсы/товары из черного списка/товары с магазинов за которыми может прийти полиция?</strong><br>Нет. Мы не принимаем такие посылки, если вы сделали это мы либо вернем либо прекратим соотрудничество с вами.",
+          "<strong>Покупаете ли вы одежду/парфюмерию?</strong><br>Нет, мы не покупаем одежду или парфюмерию, только электронику. Однако мы покупаем дорогие часы (например, Rolex или Cartier); все индивидуально и требует обсуждения с нами.",
+          "<strong>Могу ли я оформить возврат на ваши адреса?</strong><br>Да, мы разрешаем возвраты, но только при соблюдении наших условий, указанных в правилах",
+          "<strong>Кто является администратором/поддержкой проекта?</strong><br>Единственный аккаунт — @bobercc",
+          "<strong>Какова цена за покупку электроники?</strong><br>Актуальный список всегда доступен в Buy List вкладка",
+          "<strong>Что означает POP при заполнении формы?</strong><br>Это сокращение от 'Proof of Purchase', то есть доказательство вашей покупки. Нам нужно убедиться, что заказ сделан легально.",
+          "<strong>Что такое 'reroute' и зачем он нужен?</strong><br>Reroute означает перенаправление посылки на наш адрес, при этом магазину указывается случайный (чистый) адрес в городе"
+        ],
+        "ua": [
+          "<strong>Чи можу я надіслати вам прогріті акаунти чи пристрої?</strong><br>Так, ми їх купуємо. Ціну уточнюйте у приватних повідомленнях.",
+          "<strong>На які адреси можна надсилати товари?</strong><br>Актуальний список доступний у боті.",
+          "<strong>Чи можна надсилати крадені товари/інвойси/товари з чорного списку/товари з магазинів, за якими може прийти поліція?</strong><br>Ні. Ми не приймаємо такі посилки. У разі порушення — повернення або припинення співпраці.",
+          "<strong>Чи купуєте ви одяг або парфуми?</strong><br>Ні, ми не купуємо одяг або парфуми — лише електроніку. Дорогі годинники (наприклад, Rolex або Cartier) можливі після обговорення.",
+          "<strong>Чи дозволяєте ви оформлювати повернення на ваші адреси?</strong><br>Так, але лише за умов, зазначених у наших правилах.",
+          "<strong>Хто є адміністратором/підтримкою проекту?</strong><br>Єдиний офіційний акаунт — @bobercc.",
+          "<strong>Яка ціна на покупку електроніки?</strong><br>Актуальний список завжди у вкладці Buy List.",
+          "<strong>Що означає POP у формі?</strong><br>POP — це скорочення від 'Proof of Purchase' (доказ покупки). Ми маємо впевнитися в легальності замовлення.",
+          "<strong>Що таке 'reroute' і навіщо це потрібно?</strong><br>Reroute означає пересилання посилки на нашу адресу після оформлення на випадкову (чисту) адресу в місті."
+        ]
+
+      }
+    },
+    {
+      "title": {
+        "en": "Earn with Us",
+        "ru": "Заработок с нами",
+        "ua": "Заробіток з нами"
+      },
+      "content": {
+        "en": [
+          "<strong>Earn with us</strong><br>Refer clients who are ready to sell us their equipment. Notify us in private messages, be sure to include your friend's tag. After confirming the deal, you will receive a reward."
+        ],
+        "ru": [
+          "<strong>Зарабатывайте вместе с нами</strong><br>Направляйте клиентов, которые готовы продать нам свою технику. Сообщите об этом в личные сообщения, обязательно указав тег вашего друга. После подтверждения сделки вы получите вознаграждение."
+        ],
+        "ua": [
+          "<strong>Заробляйте разом з нами</strong><br>Направляйте клієнтів, які готові продати нам свою техніку. Повідомте про це в особисті повідомлення, обов’язково вказавши тег вашого друга. Після підтвердження угоди ви отримаете винагороду."
+        ]
+      }
+    },
+    {
+      "title": {
+        "en": "Pick-Up Cost",
+        "ru": "Стоимость пикапа",
+        "ua": "Вартість пикапа"
+      },
+      "content": {
+        "en": [
+          "<strong>1.</strong> Parcel pickup costs $55. Please coordinate your warm-up orders with us; otherwise, we will not pick them up from the point.",
+          "<strong>2.</strong> The price for the address is deducted from the payment."
+        ],
+        "ru": [
+          "<strong>1.</strong> Стоимость пикапа посылки составляет $55 или 75$ в зависимости от цены пака. Пожалуйста, согласовывайте с нами заказы на прогрев; иначе мы не заберем их с пункта.",
+          "<strong>2.</strong> Стоимость адреса вычитается из оплаты."
+        ],
+        "ua": [
+          "<strong>1.</strong> Стоимость пикапа посылки составляет $55 или 75$ в зависимости от цены пака. Пожалуйста, согласовывайте с нами заказы на прогрев; иначе мы не заберем их с пункта.",
+          "<strong>2.</strong> Стоимость адреса вычитается из оплаты."
+        ]
+      }
+    },
+    {
+      "title": {
+        "en": "Deposit for Getting an Address",
+        "ru": "Депозит для получения адреса",
+        "ua": "Депозит для отримання адреси"
+      },
+      "content": {
+        "en": [
+          "<strong>1.</strong> To obtain an address, you need to make a deposit of $10.",
+          "<strong>2.</strong> The deposit is refunded during payment if no warm-up orders are sent."
+        ],
+        "ru": [
+          "<strong>1.</strong> Чтобы получить адрес, необходимо внести депозит в размере $10.",
+          "<strong>2.</strong> Депозит возвращается при оплате, если не было отправлено заказов на прогрев."
+        ],
+        "ua": [
+          "<strong>1.</strong> Щоб отримати адресу, необхідно внести депозит у розмірі $10, включаючи комісію платіжної системи $1.",
+          "<strong>2.</strong> Депозит повертається під час оплати, якщо не було надіслано замовлень на прогрів."
+        ]
+      }
+    }
+  ]
+}

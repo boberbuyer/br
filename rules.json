@@ -1,0 +1,139 @@
+{
+  "sections": [
+    {
+      "title": {
+        "en": "General Regulations",
+        "ru": "Общие положения",
+        "ua": "Загальні положення"
+      },
+      "content": {
+        "en": [
+          "1.1 By using the BOBER SERVICE, the User automatically agrees to these Rules. Ignorance of the rules does not exempt you from responsibility for using the service.",
+          "1.2 BOBER SERVICE reserves the right to limit or block access to the use of the Service in case of User's failure to comply with the rules.",
+          "1.3 Sanctions are provided for non-compliance with the rules, ranging from refusal to cooperate to confiscation of the shipment."
+        ],
+        "ru": [
+          "1.1 Используя сервис BOBER SERVICE, Пользователь автоматически соглашается с данными Правилами. Незнание правил не освобождает от ответственности за использование сервиса.",
+          "1.2 BOBER SERVICE оставляет за собой право ограничить или заблокировать доступ к использованию Сервиса в случае несоблюдения Пользователем правил.",
+          "1.3 За несоблюдение правил предусмотрены санкции, от отказа в сотрудничестве до конфискации отправления."
+        ],
+        "ua": [
+          "1.1 Користуючись сервісом BOBER SERVICE, Користувач автоматично погоджується з цими Правилами. Незнання правил не звільняє від відповідальності за використання сервісу.",
+          "1.2 BOBER SERVICE залишає за собою право обмежити або заблокувати доступ до використання Сервісу у разі недотримання Користувачем правил.",
+          "1.3 За недотримання правил передбачені санкції, від відмови у співпраці до конфіскації відправлення."
+        ]
+      }
+    },
+    {
+      "title": {
+        "en": "Service Rules of Operation",
+        "ru": "Правила работы сервиса",
+        "ua": "Правила роботи сервісу"
+      },
+      "content": {
+        "en": [
+          "2.1. The price of the product, determining the percentage of payment for the product, is set at the time of receiving the shipment.",
+          "2.2. The User filling out the purchase form on the Service is provided with the opportunity to choose a payment option from those provided by the Service: USDT(TRC20).",
+          "2.3. Orders ordered with stolen credit cards will be returned to the store.",
+          "2.4 In case of loss of the shipment by the courier company for various reasons, we do not take responsibility.",
+          "2.5 It is prohibited to make packs with a police report or UA (Unauthorized Transaction) to residential addresses via PayPal. Through Amazon — it is allowed.",
+          "2.6 When filling out our purchase form, you are required to attach a video or photo report from the order page and from the bank page showing all order dates if:",
+          "A) Your device belongs to the category of complex devices such as: phones, tablets, laptops, drones, any Apple devices, or similar ones that can be locked by the store. (video is required here)",
+          "B) Your device belongs to the category of non-complex devices such as: camera, EcoFlow, monitor, headphones, etc. (a photo is acceptable here)",
+          "Failure to comply with this clause gives us the right to confiscate your package without payment. However, we will give you 2 days to provide the evidence.",
+          "If you attempt to deceive us by using photo/video editing software, we will confiscate your package and cease all further business with you immediately.",
+          "2.7 Unauthorized distribution of addresses is prohibited. In case of such a need, contact the administration for permission.",
+          "2.8 In Germany, it is prohibited to make packs from stores such as Otto, Mediamarkt, Saturn. Also, all stores from ebay.de are completely prohibited.",
+          "2.9 In case of loss or drop scam, compensation in the amount of 100% of the shipment cost is provided."
+        ],
+        "ru": [
+          "2.1. Цена товара, определяющая процент выплаты за товар, устанавливается на момент получения отправления.",
+          "2.2. Пользователю, заполняющему форму покупки в Сервисе, предоставляется возможность выбора варианта оплаты из предложенных Сервисом: USDT(TRC20).",
+          "2.3. Заказы, оформленные с использованием украденных кредитных карт, будут возвращены в магазин.",
+          "2.4 В случае потери отправления курьерской компанией по различным причинам мы не несем ответственности.",
+          "2.5 Запрещено отправлять посылки с полицейским отчетом или UA (несанкционированная транзакция) на жилые адреса через PayPal. Через Amazon — разрешено.",
+          "2.6 При заполнении нашей формы покупки вы обязаны приложить видео- или фотоотчет со страницы заказа и страницы банка, показывающий все даты заказа, если:",
+          "A) Ваше устройство относится к категории сложных устройств, таких как: телефоны, планшеты, ноутбуки, дроны, любые устройства Apple или подобные, которые могут быть заблокированы магазином. (здесь требуется видео)",
+          "B) Ваше устройство относится к категории несложных устройств, таких как: камера, EcoFlow, монитор, наушники и т.д. (здесь достаточно фото)",
+          "Несоблюдение этого пункта дает нам право конфисковать вашу посылку без оплаты. Однако мы предоставим вам 2 дня на предоставление доказательств.",
+          "Если вы попытаетесь обмануть нас, используя программы для редактирования фото/видео, мы конфискуем вашу посылку и немедленно прекратим все дальнейшее сотрудничество с вами.",
+          "2.7 Несанкционированное распространение адресов запрещено. В случае такой необходимости обратитесь к администрации за разрешением.",
+          "2.8 В Германии запрещено делать посылки из магазинов, таких как Otto, Mediamarkt, Saturn. Также полностью запрещены все магазины с ebay.de.",
+          "2.9 В случае потери или мошенничества с дропом предоставляется компенсация в размере 100% стоимости отправления."
+        ],
+        "ua": [
+          "2.1. Ціна товару, яка визначає відсоток виплати за товар, встановлюється на момент отримання відправлення.",
+          "2.2. Користувачу, який заповнює форму покупки в Сервісі, надається можливість вибору варіанту оплати з запропонованих Сервісом: USDT(TRC20).",
+          "2.3. Замовлення, оформлені з використанням вкрадених кредитних карток, будуть повернуті до магазину.",
+          "2.4 У разі втрати відправлення кур’єрською компанією з різних причин ми не несемо відповідальності.",
+          "2.5 Заборонено відправляти посилки з поліцейським звітом або UA (несанкціонована транзакція) на житлові адреси через PayPal. Через Amazon — дозволено.",
+          "2.6 При заповненні нашої форми покупки ви зобов’язані додати відео- або фото-звіт зі сторінки замовлення та сторінки банку, що показує всі дати замовлення, якщо:",
+          "A) Ваш пристрій належить до категорії складних пристроїв, таких як: телефони, планшети, ноутбуки, дрони, будь-які пристрої Apple або подібні, які можуть бути заблоковані магазином. (тут потрібне відео)",
+          "B) Ваш пристрій належить до категорії нескладних пристроїв, таких як: камера, EcoFlow, монітор, навушники тощо. (тут достатньо фото)",
+          "Недотримання цього пункту дає нам право конфіскувати вашу посилку без оплати. Однак ми надамо вам 2 дні на надання доказів.",
+          "Якщо ви спробуєте обдурити нас, використовуючи програми для редагування фото/відео, ми конфіскуємо вашу посилку та негайно припинимо всі подальші справи з вами.",
+          "2.7 Несанкціоноване поширення адрес заборонено. У разі такої потреби зверніться до адміністрації за дозволом.",
+          "2.8 У Німеччині заборонено робити посилки з магазинів, таких як Otto, Mediamarkt, Saturn. Також повністю заборонені всі магазини з ebay.de.",
+          "2.9 У разі втрати або шахрайства з дропом надається компенсація у розмірі 100% вартості відправлення."
+        ]
+      }
+    },
+    {
+      "title": {
+        "en": "Order Processing and Basic Rules",
+        "ru": "Обработка заказов и основные правила",
+        "ua": "Обробка замовлень та основні правила"
+      },
+      "content": {
+        "en": [
+          "3.1. It is mandatory to change the address for each shipment. (IMPORTANT)",
+          "3.2 Sending goods with warming up is allowed ONLY by agreement with the admin.",
+          "3.3. After the pack is accepted at our address, sending it for inspection takes 1-2 days.",
+          "3.4. Parcels can only be sent to the name approved by us.",
+          "3.5 After delivering the package to our address from NEW clients and receiving confirmation from our drops, the goods from the drop are sent for inspection. This process takes from 2 to 5 days, excluding weekends, holidays, and other non-working periods. (IMPORTANT)"
+        ],
+        "ru": [
+          "3.1. Обязательно менять адрес для каждого отправления. (ВАЖНО)",
+          "3.2 Отправка товаров с прогревом разрешена ТОЛЬКО по согласованию с администрацией.",
+          "3.3. После принятия посылки по нашему адресу отправка на проверку занимает 1-2 дня.",
+          "3.4. Посылки могут быть отправлены только на имя, утвержденное нами.",
+          "3.5 После доставки посылки по нашему адресу от НОВЫХ клиентов и получения подтверждения от наших дропов, товары отправляются на проверку. Этот процесс занимает от 2 до 5 дней, исключая выходные, праздники и другие нерабочие периоды. (ВАЖНО)"
+        ],
+        "ua": [
+          "3.1. Обов’язково змінювати адресу для кожного відправлення. (ВАЖЛИВО)",
+          "3.2 Відправлення товарів з прогрівом дозволено ТІЛЬКИ за погодженням з адміністрацією.",
+          "3.3. Після прийняття посилки за нашою адресою відправлення на перевірку займає 1-2 дні.",
+          "3.4. Посилки можуть бути відправлені тільки на ім’я, затверджене нами.",
+          "3.5 Після доставки посилки за нашою адресою від НОВИХ клієнтів та отримання підтвердження від наших дропів, товари відправляються на перевірку. Цей процес займає від 2 до 5 днів, за винятком вихідних, свят та інших неробочих періодів. (ВАЖЛИВО)"
+        ]
+      }
+    },
+    {
+      "title": {
+        "en": "Payment Process",
+        "ru": "Процесс оплаты",
+        "ua": "Процес оплати"
+      },
+      "content": {
+        "en": [
+          "4.1 Expect your payment to your USDT TRC-20 wallet within 24 hours after checking your goods.",
+          "4.2 When using the purchase option, do not forget about the service fee for processing your shipment.",
+          "4.3. Actual price list of our addresses - click here",
+          "4.4 Please remember that all taxes and customs duties are paid by the client."
+        ],
+        "ru": [
+          "4.1 Ожидайте оплату на ваш кошелек USDT TRC-20 в течение 24 часов после проверки ваших товаров.",
+          "4.2 При использовании опции покупки не забывайте о сервисном сборе за обработку вашего отправления.",
+          "4.3 Актуальный прайс-лист наших адресов - нажмите здесь",
+          "4.4 Пожалуйста, помните, что все налоги и таможенные пошлины оплачиваются клиентом."
+        ],
+        "ua": [
+          "4.1 Очікуйте оплату на ваш гаманець USDT TRC-20 протягом 24 годин після перевірки ваших товарів.",
+          "4.2 При використанні опції покупки не забывайте про сервісний збір за обробку вашого відправлення.",
+          "4.3 Актуальний прайс-лист наших адрес - натисніть тут",
+          "4.4 Будь ласка, пам’ятайте, що всі податки та митні збори сплачує клієнт."
+        ]
+      }
+    }
+  ]
+}

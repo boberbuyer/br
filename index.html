@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" style="--tg-viewport-height: 100vh; --tg-viewport-stable-height: 100vh;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bober Service</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-dark">
+    <div class="loader" id="loader"></div>
+    
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <img src="https://i.imgur.com/uOl8eeg.png" alt="Logo" class="logo-img">
+                    <h1 class="logo-text">bober⚡︎buyer</h1>
+                </div>
+                <button class="close-sidebar" id="close-sidebar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#buy-list" class="nav-link active" data-tab="buy-list">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Buy List</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#rules" class="nav-link" data-tab="rules">
+                            <i class="fas fa-gavel"></i>
+                            <span>Rules</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#pickup" class="nav-link" data-tab="pickup">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Info & Pickup</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#links" class="nav-link" data-tab="links">
+                            <i class="fas fa-link"></i>
+                            <span>Links</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#form" class="nav-link" data-tab="form">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Pickup form</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#login" class="nav-link" data-tab="login">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Login</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="theme-toggle">
+                    <button id="theme-toggle-btn">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+                <div class="lang-selector">
+                    <button class="lang-button" id="current-lang">🇺🇸</button>
+                    <div class="lang-dropdown" id="lang-dropdown">
+                        <button data-lang="ru">🇷🇺</button>
+                        <button data-lang="en">🇺🇸</button>
+                        <button data-lang="ua">🇺🇦</button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <button class="hamburger" id="hamburger">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="header-actions">
+                    <button id="compact-toggle" class="icon-btn">
+                        <i class="fas fa-compress-alt"></i>
+                    </button>
+                    <button id="theme-toggle-header" class="icon-btn">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="tab-container">
+                <!-- Buy List Tab -->
+                <div id="buy-list" class="tab-content active">
+                    <div class="tab-inner">
+                        <div class="search-container">
+                            <div class="search-bar">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="searchInput" placeholder="Search items...">
+                                <button id="clear-search" class="clear-search">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="region-submenu">
+                            <button class="region-button active" data-region="eu">EU Prices</button>
+                            <button class="region-button" data-region="usa">USA Prices</button>
+                        </div>
+                        <div id="region-eu" class="region-content active"></div>
+                        <div id="region-usa" class="region-content"></div>
+                    </div>
+                </div>
+
+                <!-- Rules Tab -->
+                <div id="rules" class="tab-content">
+                    <div class="content-island">
+                        <div id="rules-content"></div>
+                    </div>
+                </div>
+
+                <!-- Pickup Tab -->
+                <div id="pickup" class="tab-content">
+                    <div class="content-island">
+                        <div id="pickup-content"></div>
+                    </div>
+                </div>
+
+                <!-- Links Tab -->
+                <div id="links" class="tab-content">
+                    <div class="content-island">
+                        <div class="accordion">
+                            <div class="accordion-title">Links</div>
+                            <div class="accordion-content active">
+                                <ul class="links-list">
+                                    <li>
+                                        <i class="fab fa-telegram"></i>
+                                        <span>Our bot:</span>
+                                        <a href="https://t.me/boberservice_bot">Bober BOT</a>
+                                    </li>
+                                    <li>
+                                        <i class="fab fa-telegram"></i>
+                                        <span>Our channel:</span>
+                                        <a href="https://t.me/+qDWPqtDt4lMzNDM0">Bober Main</a>
+                                    </li>
+                                    <li>
+                                        <i class="fab fa-telegram"></i>
+                                        <span>Our feedback channel:</span>
+                                        <a href="https://t.me/+K4nBUvD3CMg5NmE0">Bober Feedback</a>
+                                    </li>
+                                    <li>
+                                        <i class="fab fa-telegram"></i>
+                                        <span>Our admin/support:</span>
+                                        <a href="https://t.me/bobercc">@Bobercc</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Tab -->
+                <div id="form" class="tab-content">
+                    <div class="form-iframe-container">
+                        <iframe src="https://app.nocodb.com/#/nc/form/3ab4d606-d930-4ab5-85bc-81a0181a39b2" class="form-iframe"></iframe>
+                    </div>
+                </div>
+
+                <!-- Login Tab -->
+                <div id="login" class="tab-content">
+                    <div class="login-panel" id="login-panel">
+                        <div class="login-card">
+                            <h2>Admin Login</h2>
+                            <div class="input-group">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="password-input" placeholder="Enter Password">
+                            </div>
+                            <p id="error-message">Incorrect Password</p>
+                            <button id="login-button">Login</button>
+                        </div>
+                    </div>
+                    <div class="form-iframe-container" style="display: none;">
+                        <iframe id="login-iframe" class="form-iframe"></iframe>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal-backdrop" id="modal-backdrop">
+        <div class="image-modal" id="image-modal">
+            <button class="close-modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <img class="modal-image" id="modal-image" src="" alt="Modal Image">
+        </div>
+    </div>
+
+    <!-- Image Hover Preview -->
+    <div class="hover-preview" id="hover-preview">
+        <img id="hover-preview-image" src="" alt="Preview">
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
