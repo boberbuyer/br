@@ -686,7 +686,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('chatId').value = '';
     document.getElementById('messageContent').value = '';
     document.getElementById('sendPhotoCheck').checked = true;
-    document.getElementById('photoUrl').value = 'https://i.imgur.com/xiLQhFF.png';
+    document.getElementById('photoUrl').value = 'https://i.imgur.com/69h9rbw.jpeg';
     document.getElementById('photoUrlField').classList.add('visible');
     document.getElementById('chatAccountSelect').value = '';
     
