@@ -1,814 +1,1161 @@
-// DOM Elements
-document.addEventListener('DOMContentLoaded', () => {
-    // Theme setup
-    setupTheme();
-    
-    // Initialize the app
-    init();
-});
+document.addEventListener('DOMContentLoaded', function() {
+  // Global state
+  const appState = {
+    accounts: {},
+    proxies: {},
+    chats: {},
+    schedules: {},
+    currentEditId: null,
+    testMode: {
+      active: false,
+      interval: null,
+      count: 0,
+      chatId: null
+    }
+  };
 
-// Theme Management
-function setupTheme() {
-    const storedTheme = localStorage.getItem('theme') || 'dark';
-    document.body.className = `theme-${storedTheme}`;
-    updateThemeIcons(storedTheme);
+  // Функция для форматирования ID чата
+  function formatChatId(chatId) {
+    // Если это строка, начинающаяся с @, оставляем как есть
+    if (typeof chatId === 'string' && chatId.startsWith('@')) {
+      return chatId;
+    }
     
-    // Theme toggle buttons
-    const themeToggleBtn = document.getElementById('theme-toggle-btn');
-    const themeToggleHeader = document.getElementById('theme-toggle-header');
+    // Если это число или строка с цифрами
+    if (typeof chatId === 'number' || (typeof chatId === 'string' && /^\d+$/.test(chatId))) {
+      // Преобразуем в строку с префиксом -100
+      return `-100${chatId.toString().replace(/^-100/, '')}`;
+    }
     
-    [themeToggleBtn, themeToggleHeader].forEach(btn => {
-        if (btn) {
-            btn.addEventListener('click', toggleTheme);
-        }
-    });
-}
+    // Если уже в формате -100..., оставляем как есть
+    if (typeof chatId === 'string' && chatId.startsWith('-100')) {
+      return chatId;
+    }
+    
+    // Если в формате -..., но не -100..., добавляем 100 после минуса
+    if (typeof chatId === 'string' && chatId.startsWith('-') && !chatId.startsWith('-100')) {
+      return `-100${chatId.substring(1)}`;
+    }
+    
+    // В остальных случаях возвращаем как есть
+    return chatId;
+  }
 
-function toggleTheme() {
-    const currentTheme = document.body.className.includes('theme-dark') ? 'dark' : 'light';
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    document.body.className = `theme-${newTheme}`;
-    localStorage.setItem('theme', newTheme);
-    
-    updateThemeIcons(newTheme);
-}
-
-function updateThemeIcons(theme) {
-    const themeIcons = document.querySelectorAll('#theme-toggle-btn i, #theme-toggle-header i');
-    
-    themeIcons.forEach(icon => {
-        if (theme === 'dark') {
-            icon.className = 'fas fa-sun';
-        } else {
-            icon.className = 'fas fa-moon';
-        }
-    });
-}
-
-// Main Initialization
-async function init() {
-    showLoader();
-    
-    // Set up event listeners
-    setupEventListeners();
-    
-    // Load data
+  // Загрузка данных из localStorage
+  function loadFromLocalStorage() {
     try {
-        await Promise.all([
-            loadBuyLists(),
-            loadRules(),
-            loadFaq()
-        ]);
-    } catch (error) {
-        console.error('Initialization failed:', error);
+      const savedState = localStorage.getItem('telegramManagerState');
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        
+        // Обновляем состояние приложения
+        if (parsedState.accounts) appState.accounts = parsedState.accounts;
+        if (parsedState.proxies) appState.proxies = parsedState.proxies;
+        if (parsedState.chats) appState.chats = parsedState.chats;
+        if (parsedState.schedules) appState.schedules = parsedState.schedules;
+        
+        logger.info("Данные успешно загружены из localStorage");
+      }
+    } catch (e) {
+      console.error("Ошибка загрузки данных из localStorage:", e);
     }
-    
-    // Initialize UI
-    initializeUI();
-    
-    hideLoader();
-}
+  }
 
-function setupEventListeners() {
-    // Hamburger menu
-    const hamburger = document.getElementById('hamburger');
-    const sidebar = document.getElementById('sidebar');
-    const closeSidebar = document.getElementById('close-sidebar');
-    const mainContent = document.querySelector('.main-content');
-    
-    hamburger.addEventListener('click', () => {
-        sidebar.classList.toggle('active');
-        if (window.innerWidth > 768) {
-            mainContent.classList.toggle('sidebar-expanded');
-        }
-    });
-    
-    closeSidebar.addEventListener('click', () => {
-        sidebar.classList.remove('active');
-        if (window.innerWidth > 768) {
-            mainContent.classList.remove('sidebar-expanded');
-        }
-    });
-    
-    // Tab navigation
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const tabId = link.getAttribute('data-tab');
-            openTab(tabId);
-            
-            if (window.innerWidth <= 768) {
-                sidebar.classList.remove('active');
-            }
-        });
-    });
-    
-    // Region buttons
-    document.querySelectorAll('.region-button').forEach(button => {
-        button.addEventListener('click', () => {
-            const region = button.getAttribute('data-region');
-            switchRegion(region);
-        });
-    });
-    
-    // Language selector
-    const langButton = document.getElementById('current-lang');
-    const langDropdown = document.getElementById('lang-dropdown');
-    
-    langButton.addEventListener('click', (e) => {
-        e.stopPropagation();
-        langDropdown.classList.toggle('active');
-    });
-    
-    langDropdown.querySelectorAll('button').forEach(button => {
-        button.addEventListener('click', () => {
-            const lang = button.getAttribute('data-lang');
-            switchLang(lang);
-            langDropdown.classList.remove('active');
-        });
-    });
-    
-    // Search functionality
-    const searchInput = document.getElementById('searchInput');
-    const clearSearch = document.getElementById('clear-search');
-    
-    searchInput.addEventListener('input', () => {
-        searchItems();
-        clearSearch.classList.toggle('active', searchInput.value.length > 0);
-    });
-    
-    clearSearch.addEventListener('click', () => {
-        searchInput.value = '';
-        searchItems();
-        clearSearch.classList.remove('active');
-    });
-    
-    // Compact mode toggle
-    const compactToggle = document.getElementById('compact-toggle');
-    const appContainer = document.querySelector('.app-container');
-    
-    compactToggle.addEventListener('click', () => {
-        appContainer.classList.toggle('compact-mode');
-        
-        // Update icon
-        const icon = compactToggle.querySelector('i');
-        if (appContainer.classList.contains('compact-mode')) {
-            icon.className = 'fas fa-expand-alt';
-        } else {
-            icon.className = 'fas fa-compress-alt';
-        }
-        
-        // Save preference
-        localStorage.setItem('compactMode', appContainer.classList.contains('compact-mode'));
-    });
-    
-    // Modal close
-    const modalBackdrop = document.getElementById('modal-backdrop');
-    const closeModal = document.querySelector('.close-modal');
-    
-    modalBackdrop.addEventListener('click', (e) => {
-        if (e.target === modalBackdrop) {
-            hideModal();
-        }
-    });
-    
-    closeModal.addEventListener('click', hideModal);
-    
-    // Login functionality
-    const loginButton = document.getElementById('login-button');
-    const passwordInput = document.getElementById('password-input');
-    const errorMessage = document.getElementById('error-message');
-    const loginPanel = document.getElementById('login-panel');
-    const loginIframe = document.getElementById('login-iframe');
-    const iframeContainer = document.querySelector('#login .form-iframe-container');
-    
-    loginButton.addEventListener('click', checkPassword);
-    
-    passwordInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') checkPassword();
-    });
-    
-    function checkPassword() {
-        const input = passwordInput.value;
-        const ADMIN_PASSWORD = '111';
-        
-        if (input === ADMIN_PASSWORD) {
-            loginPanel.style.display = 'none';
-            iframeContainer.style.display = 'block';
-            loginIframe.src = 'panel.html';
-            errorMessage.style.display = 'none';
-        } else {
-            errorMessage.style.display = 'block';
-            passwordInput.value = '';
-            passwordInput.focus();
-            
-            // Hide error message after 3 seconds
-            setTimeout(() => {
-                errorMessage.style.display = 'none';
-            }, 3000);
-        }
+  // Сохранение данных в localStorage
+  function saveToLocalStorage() {
+    try {
+      const stateToSave = {
+        accounts: appState.accounts,
+        proxies: appState.proxies,
+        chats: appState.chats,
+        schedules: appState.schedules
+      };
+      
+      localStorage.setItem('telegramManagerState', JSON.stringify(stateToSave));
+      logger.info("Данные успешно сохранены в localStorage");
+    } catch (e) {
+      console.error("Ошибка сохранения данных в localStorage:", e);
     }
-    
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!langButton.contains(e.target) && !langDropdown.contains(e.target)) {
-            langDropdown.classList.remove('active');
-        }
-    });
-    
-    // Handle escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            hideModal();
-            langDropdown.classList.remove('active');
-            
-            if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
-                sidebar.classList.remove('active');
-            }
-        }
-    });
-    
-    // Window resize handler
-    window.addEventListener('resize', () => {
-        if (window.innerWidth > 768) {
-            if (sidebar.classList.contains('active')) {
-                mainContent.classList.add('sidebar-expanded');
-            } else {
-                mainContent.classList.remove('sidebar-expanded');
-            }
-        } else {
-            mainContent.classList.remove('sidebar-expanded');
-        }
-    });
-}
+  }
 
-// Initialize UI
-function initializeUI() {
-    // Set compact mode from localStorage
-    const compactMode = localStorage.getItem('compactMode') === 'true';
-    const appContainer = document.querySelector('.app-container');
-    const compactToggle = document.getElementById('compact-toggle');
-    
-    if (compactMode) {
-        appContainer.classList.add('compact-mode');
-        compactToggle.querySelector('i').className = 'fas fa-expand-alt';
+  // Простой логгер
+  const logger = {
+    info: function(message) {
+      console.log(`[INFO] ${message}`);
+    },
+    error: function(message) {
+      console.error(`[ERROR] ${message}`);
+    },
+    warning: function(message) {
+      console.warn(`[WARNING] ${message}`);
     }
+  };
+
+  // DOM Elements
+  const navItems = document.querySelectorAll('.nav-item');
+  const contentSections = document.querySelectorAll('.content-section');
+  
+  // Account/Proxy Tabs
+  const accountProxyTabs = document.querySelectorAll('.account-proxy-tab');
+  const accountProxyContents = document.querySelectorAll('.account-proxy-content');
+  
+  // Add buttons
+  const addAccountBtn = document.getElementById('addAccount');
+  const addChatBtn = document.getElementById('addChat');
+  const addProxyBtn = document.getElementById('addProxy');
+  const addScheduleBtn = document.getElementById('addScheduleGroup');
+  
+  // Modals
+  const accountModal = document.getElementById('accountModal');
+  const chatModal = document.getElementById('chatModal');
+  const proxyModal = document.getElementById('proxyModal');
+  
+  // Close buttons
+  const closeButtons = document.querySelectorAll('.close');
+  
+  // Save/Cancel buttons
+  const saveAccountBtn = document.getElementById('saveAccount');
+  const cancelAccountBtn = document.getElementById('cancelAccount');
+  const saveChatBtn = document.getElementById('saveChat');
+  const cancelChatBtn = document.getElementById('cancelChat');
+  const saveProxyBtn = document.getElementById('saveProxy');
+  const cancelProxyBtn = document.getElementById('cancelProxy');
+  
+  // Config buttons
+  const saveConfigBtn = document.getElementById('saveConfig');
+  const loadConfigBtn = document.getElementById('loadConfig');
+  
+  // Lists
+  const accountsList = document.getElementById('accountsList');
+  const proxyList = document.getElementById('proxyList');
+  const chatList = document.getElementById('chatList');
+  const scheduleList = document.getElementById('scheduleList');
+
+  // Test Mode Elements
+  const enableTestMode = document.getElementById('enableTestMode');
+  const testModeOptions = document.getElementById('testModeOptions');
+  const testInterval = document.getElementById('testInterval');
+  const startTestBtn = document.getElementById('startTestBtn');
+  const stopTestBtn = document.getElementById('stopTestBtn');
+  const testStatus = document.getElementById('testStatus');
+
+  // Загружаем данные из localStorage при запуске
+  loadFromLocalStorage();
+
+  // Navigation
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      navItems.forEach(nav => nav.classList.remove('active'));
+      contentSections.forEach(section => section.classList.remove('active'));
+      
+      item.classList.add('active');
+      document.getElementById(item.dataset.section).classList.add('active');
+    });
+  });
+  
+  // Account/Proxy Tabs
+  accountProxyTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      accountProxyTabs.forEach(t => t.classList.remove('active'));
+      accountProxyContents.forEach(c => c.classList.remove('active'));
+      
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Open modals
+  addAccountBtn.addEventListener('click', () => {
+    resetAccountForm();
+    accountModal.style.display = 'block';
+  });
+  
+  addChatBtn.addEventListener('click', () => {
+    resetChatForm();
+    populateAccountSelect();
+    chatModal.style.display = 'block';
+  });
+  
+  addProxyBtn.addEventListener('click', () => {
+    resetProxyForm();
+    proxyModal.style.display = 'block';
+  });
+  
+  addScheduleBtn.addEventListener('click', () => {
+    showNotification('Schedule feature will be implemented soon!', 'info');
+  });
+
+  // Close modals only when clicking the X button
+  closeButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const modal = button.closest('.modal');
+      if (modal) {
+        stopTestMode();
+        modal.style.display = 'none';
+      }
+    });
+  });
+
+  // Prevent modal closing when clicking on the modal background
+  document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        // Не закрываем модальное окно при клике на фон
+        event.stopPropagation();
+      }
+    });
+  });
+
+  // Cancel buttons
+  cancelAccountBtn.addEventListener('click', () => {
+    accountModal.style.display = 'none';
+  });
+  
+  cancelChatBtn.addEventListener('click', () => {
+    stopTestMode();
+    chatModal.style.display = 'none';
+  });
+  
+  cancelProxyBtn.addEventListener('click', () => {
+    proxyModal.style.display = 'none';
+  });
+
+  // Photo checkbox toggle
+  const sendPhotoCheck = document.getElementById('sendPhotoCheck');
+  const photoUrlField = document.getElementById('photoUrlField');
+  
+  if (sendPhotoCheck && photoUrlField) {
+    sendPhotoCheck.addEventListener('change', () => {
+      if (sendPhotoCheck.checked) {
+        photoUrlField.classList.add('visible');
+      } else {
+        photoUrlField.classList.remove('visible');
+      }
+    });
+  }
+
+  // Test Mode toggle
+  if (enableTestMode && testModeOptions) {
+    enableTestMode.addEventListener('change', () => {
+      if (enableTestMode.checked) {
+        testModeOptions.style.display = 'block';
+      } else {
+        testModeOptions.style.display = 'none';
+        stopTestMode();
+      }
+    });
+  }
+
+  // Start Test button
+  if (startTestBtn) {
+    startTestBtn.addEventListener('click', () => {
+      startTestMode();
+    });
+  }
+
+  // Stop Test button
+  if (stopTestBtn) {
+    stopTestBtn.addEventListener('click', () => {
+      stopTestMode();
+    });
+  }
+
+  // Proxy toggle
+  const useProxyCheck = document.getElementById('useProxyCheck');
+  const proxyToggleContent = document.querySelector('.proxy-toggle-content');
+  const proxyToggleHeader = document.querySelector('.proxy-toggle-header');
+  
+  if (useProxyCheck && proxyToggleContent && proxyToggleHeader) {
+    useProxyCheck.addEventListener('change', () => {
+      toggleProxySelection();
+    });
     
-    // Open default tab
-    const hash = window.location.hash.substring(1);
-    if (hash && document.getElementById(hash) && hash !== 'login') {
-        openTab(hash);
+    proxyToggleHeader.addEventListener('click', (e) => {
+      if (e.target !== useProxyCheck) {
+        useProxyCheck.checked = !useProxyCheck.checked;
+        toggleProxySelection();
+      }
+    });
+  }
+
+  function toggleProxySelection() {
+    if (useProxyCheck.checked) {
+      proxyToggleContent.classList.add('expanded');
+      proxyToggleHeader.classList.add('expanded');
+      populateProxySelect();
     } else {
-        openTab('links');
+      proxyToggleContent.classList.remove('expanded');
+      proxyToggleHeader.classList.remove('expanded');
     }
-    
-    // Set default region
-    const currentRegion = 'usa';
-    switchRegion(currentRegion);
-    
-    // Set language
-    const currentLang = localStorage.getItem('lang') || 'en';
-    switchLang(currentLang);
-    
-    // Expand sidebar on desktop
-    if (window.innerWidth > 768) {
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.querySelector('.main-content');
-        
-        sidebar.classList.add('active');
-        mainContent.classList.add('sidebar-expanded');
-    }
-    
-    // Ensure Links accordion is active on init
-    const linksAccordionTitle = document.querySelector('#links .accordion-title');
-    const linksAccordionContent = linksAccordionTitle?.nextElementSibling;
-    if (linksAccordionTitle && linksAccordionContent) {
-        linksAccordionTitle.classList.add('active');
-        linksAccordionContent.classList.add('active');
-    }
-}
+  }
 
-// Tab Navigation
-function openTab(tabId) {
-    // Hide all tabs and remove active class from menu links
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+  // Add time functionality
+  const addChatTime = document.getElementById('addChatTime');
+  const chatTimeSelector = document.getElementById('chatTimeSelector');
+  
+  if (addChatTime && chatTimeSelector) {
+    addChatTime.addEventListener('click', () => {
+      addTimeItem(chatTimeSelector, addChatTime);
+    });
     
-    // Show selected tab and add active class to corresponding menu link
-    const tabElement = document.getElementById(tabId);
-    if (tabElement) {
-        tabElement.classList.add('active');
-        const navLink = document.querySelector(`[data-tab="${tabId}"]`);
-        if (navLink) navLink.classList.add('active');
+    // Add event listeners to existing delete buttons
+    document.querySelectorAll('.delete-time').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.target.closest('.time-item').remove();
+      });
+    });
+  }
+
+  function addTimeItem(container, beforeElement) {
+    const timeItem = document.createElement('div');
+    timeItem.className = 'time-item';
+    timeItem.innerHTML = `
+      <input type="number" min="0" max="23" value="9" class="time-hour"> :
+      <input type="number" min="0" max="59" value="0" class="time-minute">
+      <button class="action-btn delete-time"><i class="fas fa-times"></i></button>
+    `;
+    
+    container.insertBefore(timeItem, beforeElement);
+    
+    // Add event listener to delete button
+    timeItem.querySelector('.delete-time').addEventListener('click', () => {
+      timeItem.remove();
+    });
+  }
+
+  // Link dialog functionality
+  const linkDialog = document.getElementById('linkDialog');
+  const linkText = document.getElementById('linkText');
+  const linkUrl = document.getElementById('linkUrl');
+  const insertLinkBtn = document.getElementById('insertLink');
+  const cancelLinkBtn = document.getElementById('cancelLink');
+  const messageContent = document.getElementById('messageContent');
+  
+  document.querySelector('.toolbar-btn[data-format="link"]')?.addEventListener('click', () => {
+    const selection = getSelectionFromTextarea(messageContent);
+    linkText.value = selection;
+    linkUrl.value = '';
+    
+    const rect = document.querySelector('.toolbar-btn[data-format="link"]').getBoundingClientRect();
+    linkDialog.style.display = 'block';
+    linkDialog.style.top = `${rect.bottom + 5}px`;
+    linkDialog.style.left = `${rect.left}px`;
+  });
+  
+  cancelLinkBtn.addEventListener('click', () => {
+    linkDialog.style.display = 'none';
+  });
+  
+  insertLinkBtn.addEventListener('click', () => {
+    if (linkUrl.value) {
+      const linkMarkdown = `[${linkText.value || linkUrl.value}](${linkUrl.value})`;
+      insertTextAtCursor(messageContent, linkMarkdown);
+      linkDialog.style.display = 'none';
+    } else {
+      showNotification('Please enter a URL', 'error');
+    }
+  });
+
+  // Emoji picker functionality
+  const emojiPicker = document.getElementById('emojiPicker');
+  const emojiContainer = document.getElementById('emojiContainer');
+  const emojiCategoryBtns = document.querySelectorAll('.emoji-categories button');
+  
+  // Полный набор эмодзи для каждой категории
+  const emojis = {
+    smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕'],
+    animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🐣', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🦗', '🕷', '🕸', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🐃', '🐂', '🐄', '🐎', '🐖', '🐏', '🐑', '🦙', '🐐', '🦌', '🐕', '🐩', '🦮', '🐕‍🦺', '🐈', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🕊', '🐇', '🦝', '🦨', '🦡', '🦦', '🦥', '🐁', '🐀', '🐿', '🦔'],
+    food: ['🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶', '🌽', '🥕', '🧄', '🧅', '🥔', '🍠', '🥐', '🥯', '🍞', '🥖', '🥨', '🧀', '🥚', '🍳', '🧈', '🥞', '🧇', '🥓', '🥩', '🍗', '🍖', '🦴', '🌭', '🍔', '🍟', '🍕', '🥪', '🥙', '🧆', '🌮', '🌯', '🥗', '🥘', '🥫', '🍝', '🍜', '🍲', '🍛', '🍣', '🍱', '🥟', '🦪', '🍤', '🍙', '🍚', '🍘', '🍥', '🥠', '🥮', '🍢', '🍡', '🍧', '🍨', '🍦', '🥧', '🧁', '🍰', '🎂', '🍮', '🍭', '🍬', '🍫', '🍿', '🍩', '🍪', '🌰', '🥜', '🍯', '🥛', '🍼', '☕', '🍵', '🧃', '🥤', '🍶', '🍺', '🍻', '🥂', '🍷', '🥃', '🍸', '🍹', '🧉', '🍾', '🧊'],
+    travel: ['✈️', '🛫', '🛬', '🛩', '💺', '🛰', '🚀', '🛸', '🚁', '🛶', '⛵️', '🚤', '🛥', '🛳', '⛴', '🚢', '🚗', '🚕', '🚙', '🚌', '🚎', '🏎', '🚓', '🚑', '🚒', '🚐', '🚚', '🚛', '🚜', '🦯', '🦽', '🦼', '🛴', '🚲', '🛵', '🏍', '🛺', '🚨', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃', '🚋', '🚞', '🚝', '🚄', '🚅', '🚈', '🚂', '🚆', '🚇', '🚊', '🚉', '✈️', '🛫', '🛬', '🛩', '💺', '🛰', '🚀', '🛸', '🚁', '🛶', '⛵️', '🚤', '🛥', '🛳', '⛴', '🚢', '⚓️', '⛽️', '🚧', '🚦', '🚥', '🚏', '🗺', '🗿', '🗽', '🗼', '🏰', '🏯', '🏟', '🎡', '🎢', '🎠', '⛲️', '⛱', '🏖', '🏝', '🏜', '🌋', '⛰', '🏔', '🗻', '🏕', '⛺️', '🏠', '🏡', '🏘', '🏚', '🏗', '🏭', '🏢', '🏬', '🏣', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩', '💒', '🏛', '⛪️', '🕌', '🕍', '🛕', '🕋', '⛩', '🛤', '🛣', '🗾', '🎑', '🏞', '🌅', '🌄', '🌠', '🎇', '🎆', '🌇', '🌆', '🏙', '🌃', '🌌', '🌉', '🌁'],
+    symbols: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈️', '♉️', '♊️', '♋️', '♌️', '♍️', '♎️', '♏️', '♐️', '♑️', '♒️', '♓️', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚️', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕️', '🛑', '⛔️', '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '🚱', '🔞', '📵', '🚭', '❗️', '❕', '❓', '❔', '‼️', '⁉️', '🔅', '🔆', '〽️', '⚠️', '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯️', '💹', '❇️', '✳️', '❎', '🌐', '💠', 'Ⓜ️', '🌀', '💤', '🏧', '🚾', '♿️', '🅿️', '🈳', '🈂️', '🛂', '🛃', '🛄', '🛅', '🚹', '🚺', '🚼', '⚧', '🚻', '🚮', '🎦', '📶', '🈁', '🔣', 'ℹ️', '🔤', '🔡', '🔠', '🆖', '🆗', '🆙', '🆒', '🆕', '🆓', '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟', '🔢', '#️⃣', '*️⃣', '⏏️', '▶️', '⏸', '⏯', '⏹', '⏺', '⏭', '⏮', '⏩', '⏪', '⏫', '⏬', '◀️', '🔼', '🔽', '➡️', '⬅️', '⬆️', '⬇️', '↗️', '↘️', '↙️', '↖️', '↕️', '↔️', '↪️', '↩️', '⤴️', '⤵️', '🔀', '🔁', '🔂', '🔄', '🔃', '🎵', '🎶', '➕', '➖', '➗', '✖️', '♾', '💲', '💱', '™️', '©️', '®️', '〰️', '➰', '➿', '🔚', '🔙', '🔛', '🔝', '🔜', '✔️', '☑️', '🔘', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '⚫️', '⚪️', '🟤', '🔺', '🔻', '🔸', '🔹', '🔶', '🔷', '🔳', '🔲', '▪️', '▫️', '◾️', '◽️', '◼️', '◻️', '🟥', '🟧', '🟨', '🟩', '🟦', '🟪', '⬛️', '⬜️', '🟫', '🔈', '🔇', '🔉', '🔊', '🔔', '🔕', '📣', '📢', '👁‍🗨', '💬', '💭', '🗯', '♠️', '♣️', '♥️', '♦️', '🃏', '🎴', '🀄️', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚', '🕛', '🕜', '🕝', '🕞', '🕟', '🕠', '🕡', '🕢', '🕣', '🕤', '🕥', '🕦', '🕧']
+  };
+  
+  // Load emojis for a category
+  function loadEmojis(category) {
+    if (emojiContainer) {
+      emojiContainer.innerHTML = '';
+      emojis[category].forEach(emoji => {
+        const emojiElement = document.createElement('div');
+        emojiElement.className = 'emoji';
+        emojiElement.textContent = emoji;
+        emojiElement.addEventListener('click', () => {
+          insertTextAtCursor(messageContent, emoji);
+          emojiPicker.style.display = 'none';
+        });
+        emojiContainer.appendChild(emojiElement);
+      });
+    }
+  }
+  
+  // Emoji category buttons
+  emojiCategoryBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      emojiCategoryBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadEmojis(btn.dataset.category);
+    });
+  });
+  
+  // Show emoji picker when emoji button is clicked
+  document.querySelector('.toolbar-btn[data-format="emoji"]')?.addEventListener('click', () => {
+    const rect = document.querySelector('.toolbar-btn[data-format="emoji"]').getBoundingClientRect();
+    emojiPicker.style.display = 'block';
+    emojiPicker.style.top = `${rect.bottom + 5}px`;
+    emojiPicker.style.left = `${rect.left}px`;
+    loadEmojis('smileys');
+  });
+  
+  // Close emoji picker when clicking outside
+  document.addEventListener('click', (e) => {
+    if (emojiPicker && emojiPicker.style.display === 'block') {
+      if (!emojiPicker.contains(e.target) && !e.target.closest('.toolbar-btn[data-format="emoji"]')) {
+        emojiPicker.style.display = 'none';
+      }
     }
     
-    // Update URL hash
-    window.location.hash = tabId;
+    if (linkDialog && linkDialog.style.display === 'block') {
+      if (!linkDialog.contains(e.target) && !e.target.closest('.toolbar-btn[data-format="link"]')) {
+        linkDialog.style.display = 'none';
+      }
+    }
+  });
+  
+  // Text formatting buttons
+  document.querySelector('.toolbar-btn[data-format="bold"]')?.addEventListener('click', () => {
+    wrapSelectedText(messageContent, '**', '**');
+  });
+  
+  document.querySelector('.toolbar-btn[data-format="italic"]')?.addEventListener('click', () => {
+    wrapSelectedText(messageContent, '_', '_');
+  });
+
+  // Save account
+  saveAccountBtn.addEventListener('click', () => {
+    const accountName = document.getElementById('accountName').value.trim();
+    const apiId = document.getElementById('apiId').value.trim();
+    const apiHash = document.getElementById('apiHash').value.trim();
+    const phoneNumber = document.getElementById('phoneNumber').value.trim();
+    const sessionFile = document.getElementById('sessionFile').value.trim();
     
-    // Render content based on tab
-    if (tabId === 'rules') renderRules();
-    if (tabId === 'pickup') renderFaq();
-    if (tabId === 'buy-list') renderBuyLists(currentRegion);
-    
-    // Ensure Links accordion is always active
-    const linksAccordionTitle = document.querySelector('#links .accordion-title');
-    const linksAccordionContent = linksAccordionTitle?.nextElementSibling;
-    if (linksAccordionTitle && linksAccordionContent) {
-        linksAccordionTitle.classList.add('active');
-        linksAccordionContent.classList.add('active');
+    if (!accountName || !apiId || !apiHash || !phoneNumber) {
+      showNotification('Please fill in all required fields', 'error');
+      return;
     }
     
-    // Hide modal and preview
-    hideModal();
-    hideHoverPreview();
-}
-
-// Language Switching
-let currentLang = 'en';
-
-function switchLang(lang) {
-    currentLang = lang;
-    localStorage.setItem('lang', lang);
+    let proxyName = null;
+    if (useProxyCheck.checked) {
+      proxyName = document.getElementById('proxySelect').value;
+      if (!proxyName) {
+        showNotification('Please select a proxy or uncheck the proxy option', 'error');
+        return;
+      }
+    }
     
-    // Update language button
-    const langButton = document.getElementById('current-lang');
-    langButton.textContent = { 'en': '🇺🇸', 'ru': '🇷🇺', 'ua': '🇺🇦' }[lang];
-    
-    // Update menu items
-    const tabTitles = {
-        'buy-list': { en: 'Buy List', ru: 'Скуп Лист', ua: 'Скуп Лист' },
-        'rules': { en: 'Rules', ru: 'Правила', ua: 'Правила' },
-        'pickup': { en: 'Info & Pickup', ru: 'Инфо и Пикап', ua: 'Інфо та Пікап' },
-        'links': { en: 'Links', ru: 'Ссылки', ua: 'Посилання' },
-        'form': { en: 'Pickup form', ru: 'Форма на пикап', ua: 'Форма на пикап' },
-        'login': { en: 'Login', ru: 'Логин', ua: 'Логін' }
+    const accountData = {
+      id: appState.currentEditId || generateId(),
+      name: accountName,
+      apiId: apiId,
+      apiHash: apiHash,
+      phoneNumber: phoneNumber,
+      sessionFile: sessionFile || `${accountName.toLowerCase().replace(/\s+/g, '_')}.session`,
+      proxy: proxyName
     };
     
-    document.querySelectorAll('.nav-link').forEach(link => {
-        const tabId = link.getAttribute('data-tab');
-        const span = link.querySelector('span');
-        if (span) {
-            span.textContent = tabTitles[tabId][currentLang];
-        }
-    });
+    appState.accounts[accountData.id] = accountData;
+    renderAccounts();
+    accountModal.style.display = 'none';
+    showNotification('Account saved successfully!', 'success');
+    appState.currentEditId = null;
     
-    // Re-render content
-    renderRules();
-    renderFaq();
-    renderBuyLists(currentRegion);
-}
+    // Сохраняем данные в localStorage
+    saveToLocalStorage();
+  });
 
-// Region Switching
-let currentRegion = 'eu';
-let buyListDataEU = null;
-let buyListDataUSA = null;
-let rulesData = null;
-let faqData = null;
-
-function switchRegion(region) {
-    currentRegion = region;
+  // Save proxy
+  saveProxyBtn.addEventListener('click', () => {
+    const proxyName = document.getElementById('proxyName').value.trim();
+    const proxyType = document.getElementById('proxyType').value;
+    const proxyHost = document.getElementById('proxyHost').value.trim();
+    const proxyPort = document.getElementById('proxyPort').value.trim();
+    const proxyUsername = document.getElementById('proxyUsername').value.trim();
+    const proxyPassword = document.getElementById('proxyPassword').value.trim();
     
-    // Update UI
-    document.querySelectorAll('.region-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    document.querySelectorAll('.region-button').forEach(button => {
-        button.classList.remove('active');
-    });
-    
-    // Activate selected region
-    const regionContent = document.getElementById(`region-${region}`);
-    const regionButton = document.querySelector(`.region-button[data-region="${region}"]`);
-    if (regionContent) regionContent.classList.add('active');
-    if (regionButton) regionButton.classList.add('active');
-    
-    // Render buy list for selected region
-    renderBuyLists(region);
-}
-
-function toggleAccordion(element) {
-    const content = element.nextElementSibling;
-    
-    // Close all other accordions except the Links accordion
-    document.querySelectorAll('.accordion-title, .category-title').forEach(title => {
-        if (title !== element && !title.closest('#links')) {
-            title.classList.remove('active');
-            title.nextElementSibling.classList.remove('active');
-        }
-    });
-    
-    // Toggle the clicked accordion
-    element.classList.toggle('active');
-    content.classList.toggle('active');
-    
-    // Scroll into view if opening (except for Links accordion)
-    if (element.classList.contains('active') && !element.closest('#links')) {
-        setTimeout(() => {
-            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 300);
+    if (!proxyName || !proxyHost || !proxyPort) {
+      showNotification('Please fill in all required fields', 'error');
+      return;
     }
-}
-
-// Search Functionality
-function searchItems() {
-    const input = document.getElementById('searchInput').value.toLowerCase().trim();
-    const categoryTables = document.querySelectorAll('#buy-list .category-table');
     
-    categoryTables.forEach(category => {
-        const items = category.querySelectorAll('.item');
-        let hasVisibleItems = false;
-        
-        items.forEach(item => {
-            const name = item.querySelector('.item-name').textContent.toLowerCase();
-            const percentage = item.querySelector('.item-percentage').textContent.toLowerCase();
-            const description = item.querySelector('.item-description') ? 
-                item.querySelector('.item-description').textContent.toLowerCase() : '';
+    const proxyData = {
+      id: appState.currentEditId || generateId(),
+      name: proxyName,
+      type: proxyType,
+      host: proxyHost,
+      port: proxyPort,
+      username: proxyUsername,
+      password: proxyPassword
+    };
+    
+    appState.proxies[proxyData.id] = proxyData;
+    renderProxies();
+    proxyModal.style.display = 'none';
+    showNotification('Proxy saved successfully!', 'success');
+    appState.currentEditId = null;
+    
+    // Сохраняем данные в localStorage
+    saveToLocalStorage();
+  });
+
+  // Save chat
+  saveChatBtn.addEventListener('click', () => {
+    const chatName = document.getElementById('chatName').value.trim();
+    const chatIdInput = document.getElementById('chatId').value.trim();
+    const messageContent = document.getElementById('messageContent').value.trim();
+    const sendPhoto = document.getElementById('sendPhotoCheck').checked;
+    const photoUrl = document.getElementById('photoUrl').value.trim();
+    const accountId = document.getElementById('chatAccountSelect').value;
+    
+    if (!chatName || !chatIdInput || !messageContent || !accountId) {
+      showNotification('Please fill in all required fields', 'error');
+      return;
+    }
+    
+    // Форматируем ID чата
+    const chatId = formatChatId(chatIdInput);
+    
+    // Get posting times
+    const times = [];
+    document.querySelectorAll('.time-item').forEach(item => {
+      const hour = parseInt(item.querySelector('.time-hour').value);
+      const minute = parseInt(item.querySelector('.time-minute').value);
+      times.push({ hour, minute });
+    });
+    
+    if (times.length === 0) {
+      showNotification('Please add at least one posting time', 'error');
+      return;
+    }
+    
+    const chatData = {
+      id: appState.currentEditId || generateId(),
+      name: chatName,
+      chatId: chatId, // Используем отформатированный ID
+      message: messageContent,
+      sendPhoto: sendPhoto,
+      photoUrl: sendPhoto ? photoUrl : '',
+      accountId: accountId,
+      times: times
+    };
+    
+    appState.chats[chatData.id] = chatData;
+    renderChats();
+    chatModal.style.display = 'none';
+    showNotification('Chat saved successfully!', 'success');
+    appState.currentEditId = null;
+    stopTestMode();
+    
+    // Сохраняем данные в localStorage
+    saveToLocalStorage();
+  });
+
+  // Save/Load Config
+  saveConfigBtn.addEventListener('click', () => {
+    const config = JSON.stringify(appState, null, 2);
+    copyToClipboard(config);
+    showNotification('Конфигурация скопирована в буфер обмена!', 'success');
+  });
+  
+  loadConfigBtn.addEventListener('click', () => {
+    const loadFromClipboard = async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        try {
+          const config = JSON.parse(text);
+          if (config.accounts || config.proxies || config.chats) {
+            Object.assign(appState, config);
+            renderAll();
+            showNotification('Конфигурация успешно загружена!', 'success');
             
-            const isVisible = name.includes(input) || 
-                              percentage.includes(input) || 
-                              description.includes(input);
-            
-            item.style.display = isVisible ? '' : 'none';
-            if (isVisible) hasVisibleItems = true;
-        });
-        
-        category.style.display = hasVisibleItems ? '' : 'none';
-        
-        // Expand categories with visible items
-        if (hasVisibleItems && input.length > 0) {
-            const content = category.querySelector('.table-content');
-            const title = category.querySelector('.category-title');
-            content.classList.add('active');
-            title.classList.add('active');
+            // Сохраняем данные в localStorage
+            saveToLocalStorage();
+          } else {
+            showNotification('Неверный формат конфигурации', 'error');
+          }
+        } catch (e) {
+          showNotification('Неверный формат JSON', 'error');
         }
+      } catch (e) {
+        showNotification('Не удалось получить доступ к буферу обмена', 'error');
+      }
+    };
+    
+    loadFromClipboard();
+  });
+
+  // Test Mode Functions
+  function startTestMode() {
+    if (appState.testMode.active) return;
+    
+    const chatName = document.getElementById('chatName').value.trim();
+    const chatIdInput = document.getElementById('chatId').value.trim();
+    const messageContent = document.getElementById('messageContent').value.trim();
+    const sendPhoto = document.getElementById('sendPhotoCheck').checked;
+    const photoUrl = document.getElementById('photoUrl').value.trim();
+    const accountId = document.getElementById('chatAccountSelect').value;
+    const intervalSeconds = parseInt(testInterval.value) || 5;
+    
+    if (!chatIdInput || !messageContent || !accountId) {
+      showNotification('Please fill in chat ID, message and select an account for testing', 'error');
+      return;
+    }
+    
+    // Форматируем ID чата
+    const chatId = formatChatId(chatIdInput);
+    
+    appState.testMode.active = true;
+    appState.testMode.count = 0;
+    appState.testMode.chatId = chatId; // Используем отформатированный ID
+    appState.testMode.message = messageContent;
+    appState.testMode.accountId = accountId;
+    appState.testMode.sendPhoto = sendPhoto;
+    appState.testMode.photoUrl = sendPhoto ? photoUrl : null;
+    
+    startTestBtn.style.display = 'none';
+    stopTestBtn.style.display = 'inline-block';
+    testStatus.textContent = 'Test mode active. Sending messages...';
+    
+    // Send first test message immediately
+    sendTestMessage(chatId, messageContent, sendPhoto ? photoUrl : null, accountId, chatName);
+    
+    // Set interval for subsequent messages
+    appState.testMode.interval = setInterval(() => {
+      sendTestMessage(chatId, messageContent, sendPhoto ? photoUrl : null, accountId, chatName);
+    }, intervalSeconds * 1000);
+  }
+  
+  function stopTestMode() {
+    if (!appState.testMode.active) return;
+    
+    clearInterval(appState.testMode.interval);
+    appState.testMode.active = false;
+    appState.testMode.interval = null;
+    
+    if (startTestBtn && stopTestBtn && testStatus) {
+      startTestBtn.style.display = 'inline-block';
+      stopTestBtn.style.display = 'none';
+      testStatus.textContent = `Test stopped. Sent ${appState.testMode.count} test messages.`;
+    }
+  }
+  
+  function sendTestMessage(chatId, message, photoUrl, accountId, chatName) {
+    // In a real implementation, this would send an actual message
+    // For this demo, we'll just log it and update the counter
+    appState.testMode.count++;
+    console.log(`Test message #${appState.testMode.count} to ${chatId}:`, message);
+    
+    const photoStatus = photoUrl ? 'with photo' : 'without photo';
+    testStatus.textContent = `Sent ${appState.testMode.count} test messages to ${chatName} (${photoStatus})`;
+    
+    showNotification(`Test message #${appState.testMode.count} sent to ${chatName}`, 'success');
+  }
+
+  // Helper Functions
+  function resetAccountForm() {
+    document.getElementById('accountName').value = '';
+    document.getElementById('apiId').value = '';
+    document.getElementById('apiHash').value = '';
+    document.getElementById('phoneNumber').value = '';
+    document.getElementById('sessionFile').value = '';
+    document.getElementById('useProxyCheck').checked = false;
+    document.querySelector('.proxy-toggle-content').classList.remove('expanded');
+    document.querySelector('.proxy-toggle-header').classList.remove('expanded');
+    appState.currentEditId = null;
+  }
+  
+  function resetProxyForm() {
+    document.getElementById('proxyName').value = '';
+    document.getElementById('proxyType').value = 'socks5';
+    document.getElementById('proxyHost').value = '';
+    document.getElementById('proxyPort').value = '';
+    document.getElementById('proxyUsername').value = '';
+    document.getElementById('proxyPassword').value = '';
+    appState.currentEditId = null;
+  }
+  
+  function resetChatForm() {
+    document.getElementById('chatName').value = '';
+    document.getElementById('chatId').value = '';
+    document.getElementById('messageContent').value = '';
+    document.getElementById('sendPhotoCheck').checked = true;
+    document.getElementById('photoUrl').value = 'https://i.imgur.com/xiLQhFF.png';
+    document.getElementById('photoUrlField').classList.add('visible');
+    document.getElementById('chatAccountSelect').value = '';
+    
+    // Reset test mode
+    document.getElementById('enableTestMode').checked = false;
+    document.getElementById('testModeOptions').style.display = 'none';
+    document.getElementById('testInterval').value = '5';
+    document.getElementById('startTestBtn').style.display = 'inline-block';
+    document.getElementById('stopTestBtn').style.display = 'none';
+    document.getElementById('testStatus').textContent = '';
+    
+    // Reset time selector
+    const timeSelector = document.getElementById('chatTimeSelector');
+    const addTimeBtn = document.getElementById('addChatTime');
+    
+    // Remove all time items except the first one
+    const timeItems = timeSelector.querySelectorAll('.time-item');
+    for (let i = 1; i < timeItems.length; i++) {
+      timeItems[i].remove();
+    }
+    
+    // Reset the first time item
+    if (timeItems.length > 0) {
+      timeItems[0].querySelector('.time-hour').value = '9';
+      timeItems[0].querySelector('.time-minute').value = '0';
+    } else {
+      // Add a default time item if none exists
+      addTimeItem(timeSelector, addTimeBtn);
+    }
+    
+    appState.currentEditId = null;
+  }
+  
+  function populateAccountSelect() {
+    const select = document.getElementById('chatAccountSelect');
+    select.innerHTML = '<option value="">Select an account</option>';
+    
+    Object.values(appState.accounts).forEach(account => {
+      const option = document.createElement('option');
+      option.value = account.id;
+      option.textContent = account.name;
+      select.appendChild(option);
     });
-}
-
-// Image Preview and Modal
-function showHoverPreview(src, alt, event) {
-    if (!src) return;
+  }
+  
+  function populateProxySelect() {
+    const select = document.getElementById('proxySelect');
+    select.innerHTML = '<option value="">No Proxy</option>';
     
-    const hoverPreview = document.getElementById('hover-preview');
-    const hoverPreviewImage = document.getElementById('hover-preview-image');
+    Object.values(appState.proxies).forEach(proxy => {
+      const option = document.createElement('option');
+      option.value = proxy.id;
+      option.textContent = proxy.name;
+      select.appendChild(option);
+    });
+  }
+  
+  function renderAccounts() {
+    if (!accountsList) return;
     
-    hoverPreviewImage.src = src;
-    hoverPreviewImage.alt = alt || 'Preview';
-    hoverPreview.classList.add('active');
+    accountsList.innerHTML = '';
     
-    // Position the preview near the cursor
-    const x = event.clientX + 20;
-    const y = event.clientY + 20;
-    
-    // Adjust position to keep preview within viewport
-    const previewRect = hoverPreview.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    
-    let posX = x;
-    let posY = y;
-    
-    if (x + previewRect.width > viewportWidth) {
-        posX = x - previewRect.width - 40;
+    if (Object.keys(appState.accounts).length === 0) {
+      accountsList.innerHTML = '<div class="empty-state">No accounts added yet. Click "Add Account" to get started.</div>';
+      return;
     }
     
-    if (y + previewRect.height > viewportHeight) {
-        posY = y - previewRect.height - 40;
+    Object.values(appState.accounts).forEach(account => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-title">${account.name}</div>
+          <div class="card-actions">
+            <button class="action-btn edit" data-id="${account.id}"><i class="fas fa-edit"></i></button>
+            <button class="action-btn delete" data-id="${account.id}"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <div class="card-content">
+          <div class="card-info"><strong>Phone:</strong> ${account.phoneNumber}</div>
+          <div class="card-info"><strong>Session:</strong> ${account.sessionFile}</div>
+          ${account.proxy ? `<div class="card-tag">${getProxyTypeForAccount(account.proxy)}</div>` : ''}
+        </div>
+      `;
+      
+      accountsList.appendChild(card);
+      
+      // Add event listeners
+      card.querySelector('.edit').addEventListener('click', () => {
+        editAccount(account.id);
+      });
+      
+      card.querySelector('.delete').addEventListener('click', () => {
+        if (confirm(`Are you sure you want to delete account "${account.name}"?`)) {
+          deleteAccount(account.id);
+        }
+      });
+      
+      // Добавляем обработчик клика на всю карточку
+      card.addEventListener('click', (e) => {
+        // Проверяем, что клик не был на кнопках
+        if (!e.target.closest('.action-btn')) {
+          editAccount(account.id);
+        }
+      });
+    });
+  }
+  
+  function renderProxies() {
+    if (!proxyList) return;
+    
+    proxyList.innerHTML = '';
+    
+    if (Object.keys(appState.proxies).length === 0) {
+      proxyList.innerHTML = '<div class="empty-state">No proxies added yet. Click "Add Proxy" to get started.</div>';
+      return;
     }
     
-    hoverPreview.style.left = `${posX}px`;
-    hoverPreview.style.top = `${posY}px`;
-}
-
-function hideHoverPreview() {
-    const hoverPreview = document.getElementById('hover-preview');
-    hoverPreview.classList.remove('active');
-}
-
-function showModal(src, alt) {
-    if (!src) return;
+    Object.values(appState.proxies).forEach(proxy => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-title">${proxy.name}</div>
+          <div class="card-actions">
+            <button class="action-btn edit" data-id="${proxy.id}"><i class="fas fa-edit"></i></button>
+            <button class="action-btn delete" data-id="${proxy.id}"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <div class="card-content">
+          <div class="card-info"><strong>Type:</strong> ${proxy.type.toUpperCase()}</div>
+          <div class="card-info"><strong>Host:</strong> ${proxy.host}:${proxy.port}</div>
+          <div class="card-tag">${proxy.type.toUpperCase()}</div>
+        </div>
+      `;
+      
+      proxyList.appendChild(card);
+      
+      // Add event listeners
+      card.querySelector('.edit').addEventListener('click', () => {
+        editProxy(proxy.id);
+      });
+      
+      card.querySelector('.delete').addEventListener('click', () => {
+        if (confirm(`Are you sure you want to delete proxy "${proxy.name}"?`)) {
+          deleteProxy(proxy.id);
+        }
+      });
+      
+      // Добавляем обработчик клика на всю карточку
+      card.addEventListener('click', (e) => {
+        // Проверяем, что клик не был на кнопках
+        if (!e.target.closest('.action-btn')) {
+          editProxy(proxy.id);
+        }
+      });
+    });
+  }
+  
+  function renderChats() {
+    if (!chatList) return;
     
-    const modalBackdrop = document.getElementById('modal-backdrop');
-    const modalImage = document.getElementById('modal-image');
+    chatList.innerHTML = '';
     
-    modalImage.src = src;
-    modalImage.alt = alt || 'Image';
-    modalBackdrop.classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-function hideModal() {
-    const modalBackdrop = document.getElementById('modal-backdrop');
-    modalBackdrop.classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-// Data Loading
-async function loadBuyLists() {
+    if (Object.keys(appState.chats).length === 0) {
+      chatList.innerHTML = '<div class="empty-state">No chats added yet. Click "Add Chat" to get started.</div>';
+      return;
+    }
+    
+    Object.values(appState.chats).forEach(chat => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      
+      const accountName = appState.accounts[chat.accountId]?.name || 'Unknown Account';
+      const timeStrings = chat.times.map(time => `${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}`);
+      
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-title">${chat.name}</div>
+          <div class="card-actions">
+            <button class="action-btn edit" data-id="${chat.id}"><i class="fas fa-edit"></i></button>
+            <button class="action-btn delete" data-id="${chat.id}"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <div class="card-content">
+          <div class="card-info"><strong>ID:</strong> ${chat.chatId}</div>
+          <div class="card-info"><strong>Message:</strong> ${truncateText(chat.message, 50)}</div>
+          <div class="card-info"><strong>Account:</strong> ${accountName}</div>
+          <div class="card-info"><strong>Times:</strong> ${timeStrings.join(', ')}</div>
+          ${chat.sendPhoto ? `<div class="card-tag success">With Photo</div>` : `<div class="card-tag">Text Only</div>`}
+        </div>
+      `;
+      
+      chatList.appendChild(card);
+      
+      // Add event listeners
+      card.querySelector('.edit').addEventListener('click', () => {
+        editChat(chat.id);
+      });
+      
+      card.querySelector('.delete').addEventListener('click', () => {
+        if (confirm(`Are you sure you want to delete chat "${chat.name}"?`)) {
+          deleteChat(chat.id);
+        }
+      });
+      
+      // Добавляем обработчик клика на всю карточку
+      card.addEventListener('click', (e) => {
+        // Проверяем, что клик не был на кнопках
+        if (!e.target.closest('.action-btn')) {
+          editChat(chat.id);
+        }
+      });
+    });
+  }
+  
+  function renderAll() {
+    renderAccounts();
+    renderProxies();
+    renderChats();
+  }
+  
+  function editAccount(id) {
+    const account = appState.accounts[id];
+    if (!account) return;
+    
+    appState.currentEditId = id;
+    
+    document.getElementById('accountName').value = account.name;
+    document.getElementById('apiId').value = account.apiId;
+    document.getElementById('apiHash').value = account.apiHash;
+    document.getElementById('phoneNumber').value = account.phoneNumber;
+    document.getElementById('sessionFile').value = account.sessionFile;
+    
+    const useProxyCheck = document.getElementById('useProxyCheck');
+    useProxyCheck.checked = !!account.proxy;
+    
+    if (account.proxy) {
+      document.querySelector('.proxy-toggle-content').classList.add('expanded');
+      document.querySelector('.proxy-toggle-header').classList.add('expanded');
+      populateProxySelect();
+      document.getElementById('proxySelect').value = account.proxy;
+    } else {
+      document.querySelector('.proxy-toggle-content').classList.remove('expanded');
+      document.querySelector('.proxy-toggle-header').classList.remove('expanded');
+    }
+    
+    accountModal.style.display = 'block';
+  }
+  
+  function editProxy(id) {
+    const proxy = appState.proxies[id];
+    if (!proxy) return;
+    
+    appState.currentEditId = id;
+    
+    document.getElementById('proxyName').value = proxy.name;
+    document.getElementById('proxyType').value = proxy.type;
+    document.getElementById('proxyHost').value = proxy.host;
+    document.getElementById('proxyPort').value = proxy.port;
+    document.getElementById('proxyUsername').value = proxy.username || '';
+    document.getElementById('proxyPassword').value = proxy.password || '';
+    
+    proxyModal.style.display = 'block';
+  }
+  
+  function editChat(id) {
+    const chat = appState.chats[id];
+    if (!chat) return;
+    
+    appState.currentEditId = id;
+    
+    document.getElementById('chatName').value = chat.name;
+    document.getElementById('chatId').value = chat.chatId;
+    document.getElementById('messageContent').value = chat.message;
+    
+    const sendPhotoCheck = document.getElementById('sendPhotoCheck');
+    sendPhotoCheck.checked = chat.sendPhoto;
+    
+    if (chat.sendPhoto) {
+      document.getElementById('photoUrlField').classList.add('visible');
+      document.getElementById('photoUrl').value = chat.photoUrl;
+    } else {
+      document.getElementById('photoUrlField').classList.remove('visible');
+    }
+    
+    populateAccountSelect();
+    document.getElementById('chatAccountSelect').value = chat.accountId;
+    
+    // Reset test mode
+    document.getElementById('enableTestMode').checked = false;
+    document.getElementById('testModeOptions').style.display = 'none';
+    document.getElementById('testInterval').value = '5';
+    document.getElementById('startTestBtn').style.display = 'inline-block';
+    document.getElementById('stopTestBtn').style.display = 'none';
+    document.getElementById('testStatus').textContent = '';
+    
+    // Set up time selector
+    const timeSelector = document.getElementById('chatTimeSelector');
+    const addTimeBtn = document.getElementById('addChatTime');
+    
+    // Remove all existing time items
+    timeSelector.querySelectorAll('.time-item').forEach(item => item.remove());
+    
+    // Add time items from chat data
+    chat.times.forEach(time => {
+      const timeItem = document.createElement('div');
+      timeItem.className = 'time-item';
+      timeItem.innerHTML = `
+        <input type="number" min="0" max="23" value="${time.hour}" class="time-hour"> :
+        <input type="number" min="0" max="59" value="${time.minute}" class="time-minute">
+        <button class="action-btn delete-time"><i class="fas fa-times"></i></button>
+      `;
+      
+      timeSelector.insertBefore(timeItem, addTimeBtn);
+      
+      // Add event listener to delete button
+      timeItem.querySelector('.delete-time').addEventListener('click', () => {
+        timeItem.remove();
+      });
+    });
+    
+    chatModal.style.display = 'block';
+  }
+  
+  function deleteAccount(id) {
+    delete appState.accounts[id];
+    renderAccounts();
+    showNotification('Account deleted successfully!', 'success');
+    
+    // Check if any chats use this account and update them
+    Object.values(appState.chats).forEach(chat => {
+      if (chat.accountId === id) {
+        chat.accountId = '';
+      }
+    });
+    renderChats();
+    
+    // Сохраняем данные в localStorage
+    saveToLocalStorage();
+  }
+  
+  function deleteProxy(id) {
+    delete appState.proxies[id];
+    renderProxies();
+    showNotification('Proxy deleted successfully!', 'success');
+    
+    // Check if any accounts use this proxy and update them
+    Object.values(appState.accounts).forEach(account => {
+      if (account.proxy === id) {
+        account.proxy = null;
+      }
+    });
+    renderAccounts();
+    
+    // Сохраняем данные в localStorage
+    saveToLocalStorage();
+  }
+  
+  function deleteChat(id) {
+    delete appState.chats[id];
+    renderChats();
+    showNotification('Chat deleted successfully!', 'success');
+    
+    // Сохраняем данные в localStorage
+    saveToLocalStorage();
+  }
+  
+  function getProxyTypeForAccount(proxyId) {
+    const proxy = appState.proxies[proxyId];
+    return proxy ? proxy.type.toUpperCase() + ' Proxy' : 'Unknown Proxy';
+  }
+  
+  function generateId() {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  }
+  
+  function truncateText(text, maxLength) {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  }
+  
+  function getSelectionFromTextarea(textarea) {
+    return textarea.value.substring(textarea.selectionStart, textarea.selectionEnd);
+  }
+  
+  function insertTextAtCursor(textarea, text) {
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+    const scrollTop = textarea.scrollTop;
+    
+    textarea.value = textarea.value.substring(0, startPos) + text + textarea.value.substring(endPos, textarea.value.length);
+    
+    textarea.focus();
+    textarea.selectionStart = startPos + text.length;
+    textarea.selectionEnd = startPos + text.length;
+    textarea.scrollTop = scrollTop;
+  }
+  
+  function wrapSelectedText(textarea, before, after) {
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+    const scrollTop = textarea.scrollTop;
+    const selectedText = textarea.value.substring(startPos, endPos);
+    
+    if (selectedText) {
+      textarea.value = textarea.value.substring(0, startPos) + before + selectedText + after + textarea.value.substring(endPos);
+      textarea.focus();
+      textarea.selectionStart = startPos + before.length;
+      textarea.selectionEnd = startPos + before.length + selectedText.length;
+    } else {
+      textarea.value = textarea.value.substring(0, startPos) + before + after + textarea.value.substring(endPos);
+      textarea.focus();
+      textarea.selectionStart = startPos + before.length;
+      textarea.selectionEnd = startPos + before.length;
+    }
+    
+    textarea.scrollTop = scrollTop;
+  }
+  
+  async function copyToClipboard(text) {
     try {
-        const [euResponse, usaResponse] = await Promise.all([
-            fetch('./eu_buy_list.json', { cache: 'no-store' }).then(res => {
-                if (!res.ok) throw new Error(`Failed to load EU buy list: ${res.status}`);
-                return res.json();
-            }),
-            fetch('./us_buy_list.json', { cache: 'no-store' }).then(res => {
-                if (!res.ok) throw new Error(`Failed to load USA buy list: ${res.status}`);
-                return res.json();
-            })
-        ]);
-        
-        buyListDataEU = euResponse;
-        buyListDataUSA = usaResponse;
-        
-        // Normalize data
-        [buyListDataEU, buyListDataUSA].forEach(data => {
-            if (!Array.isArray(data)) {
-                console.error('Invalid buy list data format');
-                return;
-            }
-            data.forEach(category => {
-                if (!category.items) return;
-                category.items.forEach(item => {
-                    item.percentage = item.percentage ?? '';
-                    item.imageUrl = item.imageUrl ?? '';
-                    item.description = item.description ?? '';
-                });
-            });
-        });
-        
-        return true;
-    } catch (error) {
-        console.error('Error loading buy lists:', error);
-        const errorMessage = `<p style="color: var(--error); padding: var(--space-md);">Error loading buy list: ${error.message}</p>`;
-        document.getElementById('region-eu').innerHTML = errorMessage;
-        document.getElementById('region-usa').innerHTML = errorMessage;
-        return false;
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+      console.error('Failed to copy to clipboard:', e);
+      return false;
     }
-}
+  }
 
-async function loadRules() {
-    try {
-        const response = await fetch('rules.json', { cache: 'no-store' });
-        if (!response.ok) {
-            throw new Error(`Failed to load rules: ${response.status}`);
-        }
-        rulesData = await response.json();
-        return true;
-    } catch (error) {
-        console.error('Error loading rules:', error);
-        document.getElementById('rules-content').innerHTML = `<p style="color: var(--error); padding: var(--space-md);">Error loading rules: ${error.message}</p>`;
-        return false;
-    }
-}
-
-async function loadFaq() {
-    try {
-        const response = await fetch('faq.json', { cache: 'no-store' });
-        if (!response.ok) {
-            throw new Error(`Failed to load FAQ: ${response.status}`);
-        }
-        faqData = await response.json();
-        return true;
-    } catch (error) {
-        console.error('Error loading FAQ:', error);
-        document.getElementById('pickup-content').innerHTML = `<p style="color: var(--error); padding: var(--space-md);">Error loading FAQ: ${error.message}</p>`;
-        return false;
-    }
-}
-
-// Content Rendering
-function renderBuyLists(region) {
-    const container = document.getElementById(`region-${region}`);
-    if (!container) {
-        console.error(`Region container not found: region-${region}`);
-        return;
+  // Show notification function
+  function showNotification(message, type = 'info') {
+    // Remove any existing notifications
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+      existingNotification.remove();
     }
     
-    const data = region === 'eu' ? buyListDataEU : buyListDataUSA;
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+      <div class="notification-content">
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+      </div>
+      <button class="notification-close"><i class="fas fa-times"></i></button>
+    `;
     
-    if (!data) {
-        container.innerHTML = '<p style="padding: var(--space-md);">Loading buy list...</p>';
-        return;
-    }
+    document.body.appendChild(notification);
     
-    renderItems(data, container);
-}
-
-function renderItems(data, container) {
-    container.innerHTML = '';
-    
-    if (!data || !Array.isArray(data)) {
-        container.innerHTML = '<p style="padding: var(--space-md);">No data available</p>';
-        return;
-    }
-    
-    data.forEach(category => {
-        if (!category.category || !Array.isArray(category.items)) {
-            console.warn('Invalid category data:', category);
-            return;
-        }
-        
-        const categoryTable = document.createElement('div');
-        categoryTable.className = 'category-table';
-        
-        const categoryTitle = document.createElement('div');
-        categoryTitle.className = 'category-title';
-        categoryTitle.textContent = category.category;
-        categoryTitle.addEventListener('click', () => toggleAccordion(categoryTitle));
-        
-        const tableContent = document.createElement('div');
-        tableContent.className = 'table-content';
-        
-        // Create header
-        const header = document.createElement('div');
-        header.className = 'item';
-        
-        const headerName = document.createElement('div');
-        headerName.className = 'header-name';
-        headerName.textContent = currentLang === 'en' ? 'Item' : 'Предмет';
-        
-        const headerPercentage = document.createElement('div');
-        headerPercentage.className = 'header-name';
-        headerPercentage.textContent = currentLang === 'en' ? 'Fee' : 'Комиссия';
-        
-        const headerDescription = document.createElement('div');
-        headerDescription.className = 'header-name';
-        headerDescription.textContent = currentLang === 'en' ? 'Info' : 'Инфо';
-        
-        const headerImage = document.createElement('div');
-        headerImage.className = 'header-name';
-        headerImage.textContent = currentLang === 'en' ? 'Photo' : 'Фото';
-        
-        header.appendChild(headerName);
-        header.appendChild(headerPercentage);
-        header.appendChild(headerDescription);
-        header.appendChild(headerImage);
-        tableContent.appendChild(header);
-        
-        // Create items
-        category.items.forEach(item => {
-            if (!item.name) {
-                console.warn('Invalid item data:', item);
-                return;
-            }
-            
-            const itemRow = document.createElement('div');
-            itemRow.className = 'item';
-            
-            const itemName = document.createElement('div');
-            itemName.className = 'item-name';
-            itemName.textContent = item.name;
-            
-            const itemPercentage = document.createElement('div');
-            itemPercentage.className = 'item-percentage';
-            itemPercentage.textContent = item.percentage ? `${item.percentage}%` : '-';
-            
-            const itemDescription = document.createElement('div');
-            itemDescription.className = 'item-description';
-            itemDescription.textContent = item.description || '-';
-            
-            const itemImage = document.createElement('div');
-            itemImage.className = 'item-image';
-            
-            if (item.imageUrl) {
-                const img = document.createElement('img');
-                img.src = item.imageUrl;
-                img.alt = item.name;
-                img.addEventListener('error', () => {
-                    img.remove();
-                    itemImage.textContent = '-';
-                });
-                img.addEventListener('mouseover', (e) => showHoverPreview(item.imageUrl, item.name, e));
-                img.addEventListener('mousemove', (e) => showHoverPreview(item.imageUrl, item.name, e));
-                img.addEventListener('mouseout', hideHoverPreview);
-                img.addEventListener('click', () => showModal(item.imageUrl, item.name));
-                itemImage.appendChild(img);
-            } else {
-                itemImage.textContent = '-';
-            }
-            
-            itemRow.appendChild(itemName);
-            itemRow.appendChild(itemPercentage);
-            itemRow.appendChild(itemDescription);
-            itemRow.appendChild(itemImage);
-            tableContent.appendChild(itemRow);
-        });
-        
-        categoryTable.appendChild(categoryTitle);
-        categoryTable.appendChild(tableContent);
-        container.appendChild(categoryTable);
+    // Add event listener to close button
+    notification.querySelector('.notification-close').addEventListener('click', () => {
+      notification.remove();
     });
     
-    if (container.innerHTML === '') {
-        container.innerHTML = '<p style="padding: var(--space-md);">No items to display.</p>';
-    }
-}
-
-function renderRules() {
-    if (!rulesData) {
-        console.warn('No rules data available');
-        return;
-    }
-    
-    const container = document.getElementById('rules-content');
-    if (!container) {
-        console.error('Rules container not found');
-        return;
-    }
-    
-    container.innerHTML = '';
-    
-    rulesData.sections.forEach(section => {
-        const accordion = document.createElement('div');
-        accordion.className = 'accordion';
-        
-        const title = document.createElement('div');
-        title.className = 'accordion-title';
-        title.textContent = section.title[currentLang] || section.title.en;
-        title.addEventListener('click', () => toggleAccordion(title));
-        
-        const content = document.createElement('div');
-        content.className = 'accordion-content';
-        
-        const contentItems = section.content[currentLang] || section.content.en;
-        contentItems.forEach(item => {
-            const paragraph = document.createElement('p');
-            paragraph.textContent = item;
-            paragraph.style.marginBottom = 'var(--space-sm)';
-            content.appendChild(paragraph);
-        });
-        
-        accordion.appendChild(title);
-        accordion.appendChild(content);
-        container.appendChild(accordion);
-    });
-}
-
-function renderFaq() {
-    if (!faqData) {
-        console.warn('No FAQ data available');
-        const container = document.getElementById('pickup-content');
-        if (container) {
-            container.innerHTML = '<p style="padding: var(--space-md);">FAQ data is currently unavailable.</p>';
-        }
-        return;
-    }
-
-    const container = document.getElementById('pickup-content');
-    if (!container) {
-        console.error('FAQ container not found');
-        return;
-    }
-
-    container.innerHTML = '';
-
-    faqData.sections.forEach(section => {
-        const accordion = document.createElement('div');
-        accordion.className = 'accordion faq-accordion';
-
-        const title = document.createElement('div');
-        title.className = 'accordion-title';
-        title.textContent = section.title[currentLang] || section.title.en;
-        title.addEventListener('click', () => toggleAccordion(title));
-
-        const content = document.createElement('div');
-        content.className = 'accordion-content';
-
-        const faqList = document.createElement('div');
-        faqList.className = 'faq-list';
-
-        const contentItems = section.content[currentLang] || section.content.en;
-        contentItems.forEach(item => {
-            const faqItem = document.createElement('div');
-            faqItem.className = 'faq-item';
-            faqItem.innerHTML = item;
-            faqList.appendChild(faqItem);
-        });
-
-        content.appendChild(faqList);
-        accordion.appendChild(title);
-        accordion.appendChild(content);
-        container.appendChild(accordion);
-    });
-    
-    // Removed the code that opens the first accordion by default
-    // Now all FAQ accordions will be closed by default
-}
-
-// Utility Functions
-function showLoader() {
-    const loader = document.getElementById('loader');
-    if (loader) loader.style.display = 'flex';
-}
-
-function hideLoader() {
-    const loader = document.getElementById('loader');
-    if (!loader) return;
-    
-    loader.style.opacity = '0';
-    loader.style.visibility = 'hidden';
-    
+    // Auto-remove after 3 seconds
     setTimeout(() => {
-        loader.style.display = 'none';
-    }, 300);
-}
+      if (document.body.contains(notification)) {
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+          if (document.body.contains(notification)) {
+            notification.remove();
+          }
+        }, 300);
+      }
+    }, 3000);
+  }
+
+  // Initialize the app
+  renderAll();
+});
