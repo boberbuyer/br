@@ -421,7 +421,7 @@ label {
   background-color: var(--bg-modal);
   margin: 5% auto;
   width: 90%;
-  max-width: 500px;
+  max-width: 1100px;
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
   overflow: hidden;
